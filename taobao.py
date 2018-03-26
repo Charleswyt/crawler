@@ -5,12 +5,13 @@ Created on
 Finished on 
 @author: Wang Yuntao
 """
-from crawl import *
+
 import re
+from crawl import *
 
 """
     function:
-        get_goods_prince(_goods, number)                根据
+        get_goods_prince(_goods, number)                显示指定商品的价格
         page_parser(_html)                              对爬取到的html进行解析
         print_goods_list(_goods_list)                   对商品信息进行打印
         
@@ -30,6 +31,7 @@ def page_parser(_html):
     titles = pattern_title.findall(_html)
     for index in range(len(prices)):
         price = eval(prices[index].split(":")[1])
+        price = float(price)
         title = eval(titles[index].split(":")[1])
         _goods_list.append([price, title])
 
@@ -50,14 +52,14 @@ def print_goods_list(_goods_list):
         print(tplt.format(count, _goods[0], _goods[1], chr(12288)))
 
 
-def get_goods_prince(_goods, number):
+def get_goods_prince(_goods, _number):
     """
     get the price of the goods according to the its name
     :param _goods: the name of the goods (str)
-    :param number:
+    :param _number:
     :return:
     """
-    depth = number // 44 + 1
+    depth = _number // 44 + 1
     start_url = "http://s.taobao.com/search?q=" + _goods
     _goods_list = []
 
@@ -69,12 +71,13 @@ def get_goods_prince(_goods, number):
         except NotImplementedError:
             continue
 
-    _goods_list = _goods_list[: number]
+    _goods_list = _goods_list[: _number]
+    print(_goods_list)
 
     return _goods_list
 
 
 if __name__ == "__main__":
-    goods = "面包"
-    goods_list = get_goods_prince(goods, 20)
+    goods, number = "电脑", 20
+    goods_list = get_goods_prince(goods, number)
     print_goods_list(goods_list)

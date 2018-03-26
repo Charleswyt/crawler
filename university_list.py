@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
         get_html(_year=2016)                                            根据指定年份获取html内容
         get_univ_list(_html)                                            使用BeautifulSoup对html进行解析，生成大学排名列表
         print_univ_list(university_list, _number)                       对大学排名列表进行展示
-        get_univ_rank(university_name, year)                            根据大学名判断其制定年份的排名
+        get_univ_rank(university_name, _year)                           根据大学名判断其制定年份的排名
         get_univ_location((university_name)                             根据大学名判断其所在省份
         
 """
@@ -43,9 +43,7 @@ def get_html(_year=2016):
     else:
         _url = "http://www.zuihaodaxue.cn/zuihaodaxuepaiming" + str(_year) + ".html"
 
-    _agent_file_path = "E:/Myself/1.source_code/crawler/user_agents.txt"
-    _headers = get_agent(_agent_file_path)
-    _html = get_html_text(_url=_url, _headers=_headers, timeout=3)
+    _html = get_html_text(_url=_url)
 
     return _html
 
@@ -121,7 +119,7 @@ def get_univ_location(university_name):
 
 
 if __name__ == "__main__":
-    year, number = 2015, 10
+    year, number = 2016, 10
     html = get_html(year)
     univ_list = get_univ_list(html)
     print_univ_list(univ_list, number)
