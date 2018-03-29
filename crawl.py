@@ -18,7 +18,7 @@ win_unicode_console.enable()
     Function list:    
         load_user_agent(_agent_file_path)                               从本地加载User Agent文件
         get_agent(_agent_file_path)                                     从本地加载User Agent文件，并随机获取一个User Agent
-        download_media(_url, _file_dir, _timeout=10)                    给定媒体链接，并对其进行下载
+        download_media(_url, _file_dir, _file_name=None, _timeout=10)   给定媒体链接，并对其进行下载
         get_html_text(_url, timeout=10)                                 获取网页的html文本内容
         html_write(_html, _file_path)                                   将html文本内容写入本地文件
 """
@@ -53,26 +53,29 @@ def get_agent(_agent_file_path="user_agents.txt"):
     return _headers
 
 
-def download_media(_url, _file_dir, _timeout=10):
+def download_media(_url, _file_dir, _file_name=None, _timeout=10):
     """
     download image, video, audio from the internet
     :param _url: url
     :param _file_dir: the folder used for multimedia save
+    :param _file_name: file name
     :param _timeout: timeout (s)
     :return: NULL
     """
-    file_name = _url.split("/")[-1]
-    file_path = os.path.join(_file_dir, file_name)
+    if _file_name is None:
+        file_name = _url.split("/")[-1]
+        file_path = os.path.join(_file_dir, file_name)
+    else:
+        file_path = os.path.join(_file_dir, _file_name)
     try:
         if not os.path.exists(_file_dir):
             os.mkdir(_file_dir)
         if not os.path.exists(file_path):
             with requests.Session() as sess:
-                _headers = get_agent()
-                response = sess.get(url=url, headers=_headers, timeout=_timeout)
-                print(len(response.text))
+                response = sess.get(url=_url, timeout=_timeout, stream=True)
                 with open(file_path, "wb") as file:
-                    file.write(response.content)
+                    for chunk in response.iter_content(1024):
+                        file.write(chunk)
                     print("The file is saved successfully.")
         else:
             print("The file has already existed.")
@@ -124,11 +127,11 @@ def html_read(_file_path):
 
 if __name__ == "__main__":
     # download multimedia
-    url = "http://f2.topitme.com/2/b9/71/112660598401871b92l.jpg"
-    file_dir = "E:/Myself/1.source_code/crawler/image"
-    download_media(_url=url, _file_dir=file_dir)
+    print(__doc__)
+    # url = "http://f2.topitme.com/2/b9/71/112660598401871b92l.jpg"
+    # file_dir = "E:/Myself/1.source_code/crawler/image"
+    # download_media(_url=url, _file_dir=file_dir)
 
     # download html content
-    html = get_html_text("http://www.zuihaodaxue.cn/zuihaodaxuepaiming2016.html")
-    html_write(html, "E:/Myself/1.source_code/crawler/text.txt")
-
+    # html = get_html_text("http://www.zuihaodaxue.cn/zuihaodaxuepaiming2016.html")
+    # html_write(html, "E:/Myself/1.source_code/crawler/text.txt")
