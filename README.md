@@ -12,14 +12,14 @@ You can use **pychram**, **spider** or **jupyter notebook** to debug the code. H
 **Chrome | Firefox**
 
 ## class name description
-		Variable			|				Value				|	Function
-		:-					|				:-					|	:-
-		id_class_name		|	clearfix sideNavItem stat_elem	|	get the user id
-		post_class_name		|				_3jk				|	make post
-	  user_item_class_name	|  				_4p2o				|	used to search an user
-	  user_info_class_name	|				_32mo				|	get user info
-	   location_class_name	|				_pac				|	get user loaction
-		  id_class_name		|		   _3u1 _gli _uvb			|	get user id
+     Variable	       		        | 		Value				|	Function
+	:-				|		:-				|	:-
+   id\_class\_name			|	clearfix sideNavItem stat_elem		|	get the user id
+  post\_class\_name			|		\_3jk				|	make post
+user\_item\_class\_name			|  		\_4p2o				|	used to search an user
+user\_info_class\_name			|		\_32mo				|	get user info
+ location\_class\_name			|		\_pac				|	get user loaction
+   id\_class\_name			|         \_3u1 \_gli \_uvb			|	get user id
 
 Note: these class name may be variant regularly
 
