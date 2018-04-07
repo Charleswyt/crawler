@@ -45,9 +45,9 @@ def get_unix_stamp(_time_string):
     return int(_unix_time_stamp)
 
 
-def get_size(_style):
+def get_size(_style_string):
     pattern = re.compile(r"\d+\.?\d*")
-    content = pattern.findall(_style)
+    content = pattern.findall(_style_string)
     _width, _height = content[0], content[1]
 
     return _width, _height
@@ -106,13 +106,16 @@ def get_jump_url(_main_page_url, _key):
     return _url
 
 
-def download(_link, _folder_name="./", _name=None):
+def download_photos(_link, _folder_name="./", _name=None):
     if _name is None:
         _name = ((_link.split("/")[-1]).split("?")[0]).split(".")[0]
     response = requests.get(_link, stream=True)
-    with open(_folder_name + _name + ".jpg", "wb") as file:
-        shutil.copyfileobj(response.raw, file)
-        print("image %s is saved successfully.")
+    if response.status_code == 200:
+        with open(_folder_name + _name + ".jpg", "wb") as file:
+            shutil.copyfileobj(response.raw, file)
+            print("image %s is saved successfully." % (_name + ".jpg"))
+    else:
+        pass
 
 
 if __name__ == "__main__":
@@ -120,7 +123,7 @@ if __name__ == "__main__":
     print(d)
     s = get_time(1332888820)
     print(s)
-    width, height = get_image_size("width: 547px; height: 972px;")
+    width, height = get_size("width: 547px; height: 972px;")
     print(width, type(width))
     print(height, type(height))
     print(get_jump_url("https://www.facebook.com/erlyn.jumawan.7", "videos"))
