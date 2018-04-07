@@ -12,14 +12,16 @@ You can use **pychram**, **spider** or **jupyter notebook** to debug the code. H
 **Chrome | Firefox**
 
 ## class name description
-     Variable	       		        | 		Value				|	Function
-	:-				|		:-				|	:-
-   id\_class\_name			|	clearfix sideNavItem stat_elem		|	get the user id
-  post\_class\_name			|		\_3jk				|	make post
-user\_item\_class\_name			|  		\_4p2o				|	used to search an user
-user\_info_class\_name			|		\_32mo				|	get user info
- location\_class\_name			|		\_pac				|	get user loaction
-   id\_class\_name			|         \_3u1 \_gli \_uvb			|	get user id
+
+<table>
+<tr> <td>Variable</td>         		<td>Value</td>    						<td>Function</td>
+<tr> <td>id_class_name</td>    		<td>clearfix sideNavItem stat_elem</td> <td>get the user id</td>
+<tr> <td>post_class_name</td>  		<td>_3jk</td>  							<td>make post</td>
+<tr> <td>user_item_class_name</td>  <td>_4p2o</td>  						<td>used to search an user in search satus</td>
+<tr> <td>user_info_class_name</td>  <td>_32mo</td>  						<td>get user info in search satus</td>
+<tr> <td>location_class_name</td>   <td>_pac</td>  							<td>get user loaction in search satus</td>
+<tr> <td>id_class_name</td>    		<td>_3u1 _gli _uvb</td>  				<td>get user id in search satus</td>
+</table>
 
 Note: these class name may be variant regularly
 
