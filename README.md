@@ -4,7 +4,7 @@
 ## Packages
 **selenium**, **requests**, **BeautifulSoup4** and other built-in packages, such as **re**, **shutil**, **time**, **random** and so on <br>
 
-You can use **pychram**, **spider** or **jupyter notebook** to debug the code. Here, **jupyter notebook** is recommanded as the tool for step debug. <br>
+You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. Here, **jupyter notebook** and **IPython** is recommanded as the tool for step debug. <br>
 
 **Install them with "pip" command**
 
@@ -37,13 +37,18 @@ some examples can be saw in **examples.ipynb** file
 ## Documention
 	class Facebook
 
-	__init__(self, _user_name=None, _password=None, _browser_type="Chrome", _is_headless=False)
+	__init__(self, _user_name=None, _password=None, _browser_type="Chrome", _is_headless=False, _speed_mode="Normal")
 	function: constructor function
 	parameters:
 		_user_name: user name used for Facebook login
 		_password: password used for Facebook login
 		_browser_type: browser type (Chrome | Firefox)
 		_is_headless: whether use headless browser or not (True | False)
+		_speed_mode: run speed mode (Extreme | Fast | Normal | Slow)
+			"Extreme":	self.timeout = 0
+        	"Fast":		self.timeout = randint(1, 3)
+  			"Normal":	self.timeout = randint(2, 5)
+       		"Slow":		self.timeout = randint(3, 8)
 	return:
 
 	log_in(self)
@@ -114,7 +119,7 @@ some examples can be saw in **examples.ipynb** file
 		start_date: the start of the publish time
 		end_date: the end of the publish time
 		_folder_name: the floder name of the downloading photo, default is "./"
-	return: Null
+	return:
 	
 	download_photos_batch(self, _homepage_url_list, satrt_date=None, end_date=None,  _folder_name="./")
 	function: downloada photos of  user according to the homepage url and date, if the start_date, end_start and other which can be added further are None, download all photos of this user	
@@ -123,10 +128,29 @@ some examples can be saw in **examples.ipynb** file
 		start_date: the start of the publish time
 		end_date: the end of the publish time
 		_folder_name: the floder name of the downloading photo, default is "./"
-	return: Null
+	return:
 
 	
 	utils.py
+	
+	get_packages()
+	function: get all installed packages in the current machine
+	parameters:
+	return:
+		_packages: all installed packages in the current machine
+
+	package_check(packages=None)
+	function: Check whether the current packages are installed or not
+	parameters:
+		packages: the packages which need checking
+	return:
+
+	folder_make(_folder_name="./")
+	function: the encapsulation of function mkdir and exist
+	parameters:
+		_folder_name: the folder name which need creating
+	return:
+
 
 	get_time(_unix_time_stamp)
 	function: exchange the expression of the from Unix timestamp to Beijing time
@@ -187,6 +211,6 @@ some examples can be saw in **examples.ipynb** file
 		_link: the photo href
 		_folder_name: the folder name of downloading photo
 		_name: the name of the downloading photo
-	return: Null
+	return:
 
 	
