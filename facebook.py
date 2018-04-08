@@ -9,7 +9,6 @@ Finished on
 import re
 import time
 import utils
-from random import randint
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
@@ -33,13 +32,14 @@ from selenium import webdriver
 
 
 class Facebook:
-    def __init__(self, _user_name=None, _password=None, _browser_type="Chrome", _is_headless=False):
+    def __init__(self, _user_name=None, _password=None, _browser_type="Chrome", _is_headless=False, _speed_mode="Normal"):
         """
         构造函数
         :param _user_name: Facebook登录所需邮箱
         :param _password: Facebook登录对应的密码
         :param _browser_type: 浏览器类型 (Chrome | Firefox)
         :param _is_headless: 是否适用无头浏览器
+        :param _speed_mode: 运行速度模式选择 (Extreme | Fast | Normal | Slow)
         """
         # the variables which are fixed
         self.url = "https://www.facebook.com/"                      # facebook页面url
@@ -93,6 +93,9 @@ class Facebook:
             except AttributeError:
                 self.browser_state = 0
 
+        # the run speed mode selection
+        self.timeout = utils.get_timeout(_speed_mode)
+
     def log_in(self):
         """
         facebook log in via webdriver
@@ -101,20 +104,19 @@ class Facebook:
             如果facebook账号登录成功，则当前页面的url为:https://www.facebook.com
             如果facebook账号登录失败，则当前页面的url为:https://www.facebook.com/login.php?login_attempt=1&lwv=100
         """
-        timeout = randint(1, 4)
         self.driver.get(self.url)
 
         # username
         email_element = self.driver.find_element_by_id('email')
         email_element.clear()
         email_element.send_keys(self.user_name)
-        time.sleep(timeout)
+        time.sleep(self.timeout)
 
         # password
         password_element = self.driver.find_element_by_id('pass')
         password_element.clear()
         password_element.send_keys(self.password)
-        time.sleep(timeout)
+        time.sleep(self.timeout)
 
         # click
         login = self.driver.find_element_by_id('loginbutton')
@@ -130,15 +132,18 @@ class Facebook:
             self.login_state = 1
 
     def make_post(self):
-        self.enter_homepage_self()
+        current_url = self.driver.current_url
+        if current_url != self.url:
+            self.enter_homepage_self()
+        else:
+            pass
         post_element = self.driver.find_element_by_class_name(self.post_class_name)
         post_element.click()
 
     def page_refresh(self, _refresh_times=0):
-        timeout = randint(2, 8)
         for i in range(_refresh_times):
             self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-            time.sleep(timeout)
+            time.sleep(self.timeout)
 
     def enter_homepage_self(self):
         """
@@ -171,19 +176,23 @@ class Facebook:
         page_source = self.driver.page_source
         soup = BeautifulSoup(page_source, "html.parser")
 
-        # 获取好友数量
-        friends_table = soup.find(class_=self.friends_class_name)              # class name可能会变
-        content = friends_table.a.text
-        pattern = re.compile(r"\d+\.?\d*")
-        friends_number = int(pattern.findall(content)[0])
+        if _friends_number is None:
+            # 获取好友数量
+            friends_table = soup.find(class_=self.friends_class_name)              # class name可能会变
+            content = friends_table.a.text
+            pattern = re.compile(r"\d+\.?\d*")
+            friends_number = int(pattern.findall(content)[0])
 
-        # 根据好友数量进行页面刷新
-        refresh_times = friends_number // 20
-        self.page_refresh(refresh_times)
+            # 根据好友数量进行页面刷新
+            refresh_times = friends_number // 20
+            self.page_refresh(refresh_times)
 
-        # 重新对刷新后的页面进行解析
-        page_source = self.driver.page_source
-        soup = BeautifulSoup(page_source, "html.parser")
+            # 重新对刷新后的页面进行解析
+            page_source = self.driver.page_source
+            soup = BeautifulSoup(page_source, "html.parser")
+
+        else:
+            pass
 
         # 获取好友url列表
         contents = soup.find_all(class_="uiProfileBlockContent")
@@ -231,11 +240,9 @@ class Facebook:
         soup = BeautifulSoup(page, "html.parser")
         bottom_flag = soup.find_all(class_="uiHeaderTitle")
 
-        timeout = randint(2, 5)
         photos_href_list = list()
         while "更多" not in bottom_flag[-1].string or "More about" not in bottom_flag[-1].string:
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(timeout)
 
             page = self.driver.page_source
             soup = BeautifulSoup(page, "html.parser")
@@ -254,7 +261,11 @@ class Facebook:
         soup = BeautifulSoup(page, "html.parser")
 
         publish_time = soup.find("span", {"id": "fbPhotoSnowliftTimestamp"})
-        _date = publish_time.a.abbr.get("data-utime")                           # 图片发表的时间 (Unix时间戳)
+        if publish_time is None:
+            _date = []
+        else:
+            _date = publish_time.a.abbr.get("data-utime")                       # 图片发表的时间 (Unix时间戳)
+
         location_object = soup.find(class_="fbPhotosImplicitLocLink")           # 图片发表的位置信息
         if location_object is not None:
             _location = location_object.text
@@ -281,16 +292,15 @@ class Facebook:
         return _link, _date, _location, _text, _width, _height
 
     def get_photos_info_list(self, _photos_href_list):
-        timeout = randint(2, 8)
         _photos_info_list = list()
         for photo_href in _photos_href_list:
             link, date, location, text, width, height = self.get_photo_info(photo_href)
             _photos_info_list.append([link, date, location, text, width, height])
-            time.sleep(timeout)
 
         return _photos_info_list
 
     def download_photos_one(self, _homepage_url, start_date=None, end_date=None, _folder_name="./"):
+        utils.folder_make(_folder_name)
         photos_href_list = self.get_photos_list(_homepage_url)
         photos_info_list = self.get_photos_info_list(photos_href_list)
 
