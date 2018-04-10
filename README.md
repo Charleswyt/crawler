@@ -1,8 +1,8 @@
-# crawler
+# Facebook Crawler
 **Facebook crawler** with **python3.x** (the "ladder" need solving by yourself)
 
 ## Packages
-**selenium**, **requests**, **BeautifulSoup4** and other built-in packages, such as **re**, **shutil**, **time**, **random** and so on <br>
+**selenium**, **requests**, **BeautifulSoup4** and other built-in packages, such as **re**, **shutil**, **time**, **random**, **tkinter** and so on <br>
 
 You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. Here, **jupyter notebook** and **IPython** is recommanded as the tool for step debug. <br>
 
@@ -10,6 +10,56 @@ You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. H
 
 ## browser
 **Chrome | Firefox**
+
+## URL Descaiption
+**homepage**
+
++ https://www.facebook.com/
+
+**login failure**
+
++ https://www.facebook.com/login.php?login_attempt=1&lwv=110
++ https://www.facebook.com/login.php&lwv=110
+
+**user homepage**
+	
++ https://www.facebook.com/qiao.fengchun
++ https://www.facebook.com/profile.php?id=100005030479034
++ https://www.facebook.com/100005030479034
+
+**search** <br>
+
+- *https://www.facebook.com/search/"item"/?q="keyword"* <br>
+
+"**item**" and "**keyword**" can be replaced according to the demand <br>
+**item type**: posts, people, photos, videos, shop, pages, places, groups, apps, events, links <br>
+In this project, we mainly use the search of **people**, **photos**, **videos**. <br>
+
++ https://www.facebook.com/search/people/?q=test
++ https://www.facebook.com/search/str/test/keywords_users
++ https://www.facebook.com/search/photos/?q=test
+ 
+**user info** <br>
+
+- *https://www.facebook.com/"user_name"/"keyword"/* <br>
+- *https://www.facebook.com/profile.php?id="user_id"&sk="item"/* <br>
+
+"**item**" and "**user_id**" can be replaced according to the demand <br>
+**item type**: about, photos, friends, videos, music, movies, books, tv <br>
+
++ https://www.facebook.com/qiao.fengchun/friends
++ https://www.facebook.com/profile.php?id=100005030479034&sk=photos
+
+## Mechanism
+**User Search** <br>
+<table>
+<tr> <td>			      XPath						   								</td>   <td>   Variable    				 </td> </tr>
+<tr> <td> //*[@id="BrowseResultsContainer"]/div[m]/div 								</td>	<td> m=1,2,3,4,5 				 </td> </tr>
+<tr> <td> //*[@id="u_ps_fetchstream_0_3_0_browse_result_below_fold"]/div/div[n]/div </td>	<td> n=1,2,3,4,5,6 			 </td> </tr>
+<tr> <td> //*[@id="fbBrowseScrollingPagerContaineri"]/div/div[j]/div 				</td>	<td> i=1,2,... j=1,2,3,4,5,6 </td> </tr>
+</table>
+
+**User Search** <br>
 
 ## class name description
 
