@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Created on 
-Finished on 
+Created on 2018.03.09
+Finished on 2018.04.13
 @author: Wang Yuntao
 """
 
@@ -11,6 +11,7 @@ import os
 import pip
 import csv
 import time
+import json
 import shutil
 import requests
 from random import randint
@@ -18,6 +19,7 @@ from subprocess import call
 
 """
     function:
+        is_exist(var)                               确定当前变量是否存在
         get_account(_account_file, number=None)     从本地文件读取用于登录Facebook的账号和密码 (用于防止账号泄露和多账号管理)
         get_packages()                              获取当前运行的机器上的python库
         package_check(packages=None)                检查当前运行的机器上是否有程序运行依赖的库
@@ -31,10 +33,33 @@ from subprocess import call
         get_jump_url(_main_page_url, _key)          根据facebook的url规则进行处理，得到相应的跳转链接
         download_photos(_link, _folder_name="./",
          _name=None)                                根据图像的url对其进行下载
+        str2dict(string)                            将网页中原本为字典变量的字符串重新转换为字典类型
 """
 
 
+def is_exist(var):
+    """
+    判断当前变量是否存在
+    :param var: 待检测变量值
+    :return: exist - True, not exist - False
+    """
+    try:
+        type(eval(var))
+    except BaseException:
+        return False
+    else:
+        return True
+
+
 def get_account(_account_file, number=None):
+    """
+    从本地读取Facebook账户密码
+    :param _account_file: 账户文件列表
+    :param number: 用户编号, 若不设定则为随机数
+    :return:
+        account: Facebook account
+        password: Facebook password
+    """
     if not os.path.exists(_account_file):
         print("The current file is not existed.")
         account, password = None, None
@@ -58,6 +83,11 @@ def get_account(_account_file, number=None):
 
 
 def get_packages():
+    """
+    获取当前运行的机器上安装的python库
+    :return:
+        _packages: python库目录
+    """
     _packages = list()
     for distribution in pip.get_installed_distributions():
         package_name = distribution.project_name
@@ -67,6 +97,11 @@ def get_packages():
 
 
 def package_check(packages=None):
+    """
+    判断当前项目需要运行的库是否安装
+    :param packages: 待检测的python库
+    :return: NULL
+    """
     system_packages = get_packages()
     if packages is None:
         packages = ["selenium", "beautifulsoup4", "requests"]
@@ -87,6 +122,12 @@ def package_check(packages=None):
 
 
 def get_timeout(_speed_mode):
+    """
+    根据运行模式获取时间延迟
+    :param _speed_mode: 运行模式 (Extreme | Fast | Normal | Slow | Other)
+    :return:
+        timeout: 时间延迟
+    """
     if _speed_mode == "Extreme":
         timeout = 0
     elif _speed_mode == "Fast":
@@ -102,6 +143,11 @@ def get_timeout(_speed_mode):
 
 
 def folder_make(_folder_name="./"):
+    """
+    创建文件目录
+    :param _folder_name: 目录名
+    :return: NULL
+    """
     if _folder_name == "./":
         pass
     else:
@@ -114,7 +160,8 @@ def get_time(_unix_time_stamp):
     unix时间戳 -> "%Y-%m-%d %H:%M:%S"格式的时间
     e.g. 1522048036 -> 2018-03-26 15:07:16
     :param _unix_time_stamp: unix时间戳
-    :return: "%Y-%m-%d %H:%M:%S"格式的时间
+    :return:
+        "%Y-%m-%d %H:%M:%S"格式的时间
     """
     _format = "%Y-%m-%d %H:%M:%S"
     value = time.localtime(_unix_time_stamp)
@@ -137,6 +184,13 @@ def get_unix_stamp(_time_string):
 
 
 def get_size(_style_string):
+    """
+    根据解析得到的html字符串进行格式分析
+    :param _style_string: "width: ***px; height: ***px;"格式的字符串
+    :return:
+        width: 图片的宽度
+        height: 图片的高度
+    """
     pattern = re.compile(r"\d+\.?\d*")
     content = pattern.findall(_style_string)
     _width, _height = content[0], content[1]
@@ -151,7 +205,8 @@ def url_type_judge(_url):
         2. https://www.facebook.com/profile.php?id=100025029671192
     两种url的处理方式是不同的，因此需要先对其进行类型判断
     :param _url: url
-    :return: _url_type: 1 or 2 (user_name | ID)
+    :return:
+        _url_type: 1 or 2 (user_name | ID)
     """
     url_root = "https://www.facebook.com/"
     url_new = _url.replace(url_root, "")
@@ -170,6 +225,7 @@ def url_concatenate(base_url, join_url):
     :param base_url: 主链接
     :param join_url: 待合并字串
     :return:
+        new_url: 合并后的url
     """
     if base_url[-1] == "/":
         new_url = base_url + join_url
@@ -180,7 +236,22 @@ def url_concatenate(base_url, join_url):
 
 
 def get_jump_url(_main_page_url, _key):
-    keys = ["photos", "friends", "videos", "music", "books", "tv"]
+    """
+    获得Facebook跳转链接
+    :param _main_page_url:
+    :param _key: 关键字
+    :return:
+        _url: 生成的跳转链接
+    e.g.
+        _main_page_url: https://www.facebook.com/erlyn.jumawan.7
+        _key: friends
+        output: https://www.facebook.com/erlyn.jumawan.7/friends
+
+        _main_page_url: https://www.facebook.com/profile.php?id=100025029671192
+        _key: photos
+        output: https://www.facebook.com/profile.php?id=100025029671192&sk=photos
+    """
+    keys = ["about", "photos", "friends", "videos", "music", "movies", "books", "tv"]
     if _key not in keys:
         _url = None
     else:
@@ -197,7 +268,47 @@ def get_jump_url(_main_page_url, _key):
     return _url
 
 
+def user_search_xpath(_index):
+    """
+    生成用于用户查询的xpath
+    :param _index: 用户序号
+    :return:
+        xpath_str: 指定序号用户的xpath
+    """
+    count = _index + 1
+    if count <= 5:
+        xpath_str = "//*[@id=\"BrowseResultsContainer\"]/div[" + str(count) + "]/div"
+    elif 5 < count <= 11:
+        xpath_str = "//*[@id=\"u_ps_fetchstream_0_3_0_browse_result_below_fold\"]/div/div[" + str(count - 5) + "]/div"
+    else:
+        pager = (count - 12) // 6
+        number = (count - 12) % 6 + 1
+
+        xpath_str = "//*[@id=\"fbBrowseScrollingPagerContainer" + str(pager) + "\"]/div/div[" + str(number) + "]/div"
+
+    return xpath_str
+
+
+def str2dict(string):
+    """
+    将字符串转为字典变量，从网页源代码解析出的部分字典类型的变量以字符串形式存储，因此需要先对其进行转换，再取出对应元素
+    :param string: 带转换的字典形式的字符串
+    :return:
+        result_dict: 转换后的字典变量
+    """
+    result_dict = json.loads(string, encoding='UTF-8')
+
+    return result_dict
+
+
 def download_photos(_link, _folder_name="./", _name=None):
+    """
+    图像下载
+    :param _link: 图像链接
+    :param _folder_name: 用于保存图像的文件路径
+    :param _name: 下载后的图像名
+    :return: NULL
+    """
     if _name is None:
         _name = ((_link.split("/")[-1]).split("?")[0]).split(".")[0]
     response = requests.get(_link, stream=True)
