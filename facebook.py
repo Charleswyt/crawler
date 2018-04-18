@@ -37,9 +37,10 @@ from selenium.webdriver.support import expected_conditions as EC
         get_photos_info_list(self, _photos_href_list)   批量获取照片的链接，发布时间，发布位置，尺寸与对应的文字说明
         download_photos_one(self, _homepage_url)        下载单个用户的图片
         download_photos_batch(self, _homepage_url_list) 批量下载多个用户的图片
-         def params_modify(self, post_class_name, 
-         bottom_xpath_search, bottom_xpath_other, 
-         main_container_class_name,myself_id_class_name)用于对可变参数进行修改
+        params_modify(self, post_class_name, 
+            bottom_xpath_search, bottom_xpath_other, 
+            main_container_class_name, 
+            myself_id_class_name)                       用于对可变参数进行修改
          
     Note:
         实际使用中还需要根据Facebook当前的页面架构进行相应调整
@@ -59,7 +60,6 @@ class Facebook:
             browser_state:
                 0 - init fail
                 1 - init success
-                2 - the driver is running now and can be use directly
         """
         # the variables which are fixed
         self.url = "https://www.facebook.com/"                              # facebook页面url
@@ -81,7 +81,7 @@ class Facebook:
         self.cookie = None                                                  # 当前登录账号的cookie
         self.session_id = None                                              # 会话id，方便在当前打开窗口继续运行
         self.executor_url = None                                            # 会话的命令执行器连接
-        self.cookies_path = "cookies.json"                                  # 用于保存用户cookies的文件
+        self.cookies_path = "json_(" + _email + ").json"                      # 用于保存用户cookies的文件
 
         # the initialization of list
         self.user_info_friends = list()                                     # 好友信息列表 (user_name, user_id, homepage_url)
@@ -95,8 +95,7 @@ class Facebook:
             "//*[@id=\"browse_end_of_results_footer\"]/div/div"             # 用户搜索时对应的bottom标识
         self.bottom_xpath_other = \
             "//*[@id=\"timeline-medley\"]/div/div[2]/div[1]/div/div"        # 照片好友信息遍历时的bottom标识
-        self.full_screen_xpath = \
-            "//*[@id=\"fbPhotoSnowliftFullScreenSwitch\"]"                  # 全屏操作对应的xpath
+        self.full_screen_id = "fbPhotoSnowliftFullScreenSwitch"             # 全屏操作对应的id
         self.main_container_class_name = "homeSideNav"                      # 用户获取当前登录账户信息的class name
         self.myself_id_class_name = "data-nav-item-id"                      # 用户id对应的字段名
         self.friends_list_class_name = "uiProfileBlockContent"
@@ -131,8 +130,6 @@ class Facebook:
                 if _is_headless is True:
                     options.set_headless()
                     options.add_argument("--disable - gpu")
-                if utils.is_exist(self.driver):
-                    self.browser_state = 2
                 else:
                     self.driver = webdriver.Firefox(options=options)
                     self.browser_state = 1
@@ -162,19 +159,22 @@ class Facebook:
         self.driver.get(self.url)
         try:
             # username
-            email_element = self.driver.find_element_by_id('email')
+            email_element = WebDriverWait(self.driver, timeout=5).until(
+                    EC.presence_of_element_located((By.ID, "email")))
             email_element.clear()
             email_element.send_keys(self.user_name)
             time.sleep(1)
 
             # password
-            password_element = self.driver.find_element_by_id('pass')
+            password_element = WebDriverWait(self.driver, timeout=5).until(
+                    EC.presence_of_element_located((By.ID, "pass")))
             password_element.clear()
             password_element.send_keys(self.password)
             time.sleep(1)
 
             # click
-            login_element = self.driver.find_element_by_id('loginbutton')
+            login_element = WebDriverWait(self.driver, timeout=5).until(
+                    EC.presence_of_element_located((By.ID, "loginbutton")))
             login_element.click()
         except:
             pass
@@ -188,7 +188,7 @@ class Facebook:
             如果facebook账号登录失败，则当前页面的url为:https://www.facebook.com/login.php?login_attempt=1&lwv=100
         """
         if os.path.exists(self.cookies_path):
-            with open('cookies.json', 'r', encoding='utf-8') as file:
+            with open(self.cookies_path, 'r', encoding='utf-8') as file:
                 list_cookies = json.loads(file.read())
             if len(list_cookies) != 0:
                 self.driver.get(self.url)
@@ -235,7 +235,7 @@ class Facebook:
         if os.path.exists(self.cookies_path):
             pass
         else:
-            with open('cookies.json', 'w') as file:
+            with open(self.cookies_path, "w") as file:
                 file.write(json_cookies)
 
     def make_post(self):
@@ -247,22 +247,22 @@ class Facebook:
         post_element = self.driver.find_element_by_class_name(self.post_class_name)
         post_element.click()
 
-    def page_refresh_to_bottom(self, _item, _timeout=3, _poll_frequency=0.5):
+    def page_refresh_to_bottom(self, item, timeout=3, poll_frequency=0.5):
         """
         页面刷新
-        :param _item: 下拉页类型，分为用户搜索和照片搜索两类
-        :param _timeout: 模拟下拉的时间延迟
-        :param _poll_frequency: 模拟下拉的时间频率
+        :param item: 下拉页类型，分为用户搜索和照片搜索两类
+        :param timeout: 模拟下拉的时间延迟
+        :param poll_frequency: 模拟下拉的时间频率
         :return: NULL
         """
-        if _item == "users":
+        if item == "users":
             xpath = self.bottom_xpath_search
         else:
             xpath = self.bottom_xpath_other
 
         while True:
             try:
-                WebDriverWait(self.driver, timeout=_timeout, poll_frequency=_poll_frequency).until(
+                WebDriverWait(self.driver, timeout=timeout, poll_frequency=poll_frequency).until(
                     EC.presence_of_element_located((By.XPATH, xpath)))
                 break
             except:
@@ -277,10 +277,12 @@ class Facebook:
         for i in range(_refresh_times):
             self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
             try:
-                bottom_element = self.driver.find_element_by_xpath(self.bottom_xpath_search)
+                bottom_element = WebDriverWait(self.driver, timeout=3).until(
+                    EC.presence_of_element_located((By.XPATH, self.bottom_xpath_search)))
             except:
                 try:
-                    bottom_element = self.driver.find_element_by_xpath(self.bottom_xpath_other)
+                    bottom_element = WebDriverWait(self.driver, timeout=3).until(
+                        EC.presence_of_element_located((By.XPATH, self.bottom_xpath_other)))
                 except:
                     bottom_element = None
 
@@ -320,22 +322,22 @@ class Facebook:
 
         self.get(self.homepage_url)
 
-    def get_user_id(self, _user_homepage_url):
+    def get_user_id(self, user_homepage_url):
         """
         根据用户的主页url获取其user id
-        :param _user_homepage_url: 用户的主页url
+        :param user_homepage_url: 用户的主页url
         :return: user id
         """
-        if utils.url_type_judge(_user_homepage_url) == 1:
-            self.driver.get(_user_homepage_url)
+        if utils.url_type_judge(user_homepage_url) == 1:
+            self.driver.get(user_homepage_url)
             page = self.driver.page_source
             soup = BeautifulSoup(page, self.soup_type)
             cover = soup.find(class_=self.user_cover_class_name)
-            _user_id = cover.a.get("data-referrerid")
+            user_id = cover.a.get("data-referrerid")
         else:
-            _user_id = _user_homepage_url.split("id=")[-1]
+            user_id = user_homepage_url.split("id=")[-1]
 
-        return _user_id
+        return user_id
 
     def get_friends_number(self):
         """
@@ -527,7 +529,8 @@ class Facebook:
         location = self.get_photo_publish_location(soup)
         text = self.get_photo_publish_text(soup)
 
-        full_screen_element = self.driver.find_element_by_xpath(self.full_screen_xpath)
+        full_screen_element = WebDriverWait(self.driver, 5).until(
+            EC.presence_of_element_located((By.ID, self.full_screen_id)))
         full_screen_element.click()
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
@@ -538,43 +541,80 @@ class Facebook:
         return link, date, location, text, width, height
 
     def get_photos_info_list(self, _photos_href_list):
-        _photos_info_list = list()
+        photos_info_list = list()
         for photo_href in _photos_href_list:
             link, date, location, text, width, height = self.get_photo_info(photo_href)
-            _photos_info_list.append([link, date, location, text, width, height])
+            photos_info_list.append([link, date, location, text, width, height])
 
-        return _photos_info_list
+        return photos_info_list
 
-    def download_photos_one(self, _homepage_url, start_date=None, end_date=None, _folder_name="./"):
+    def download_photos_one(self, homepage_url, folder_name="./",
+                            start_date=None, end_date=None, keyword="",
+                            width_left=0, width_right=5000, height_left=0, height_right=5000):
         """
-        单个用户的
-        :param _homepage_url:
-        :param start_date:
-        :param end_date:
-        :param _folder_name:
-        :return:
+        单个用户的照片下载
+        :param homepage_url: 用户主页
+        :param folder_name: 待保存文件夹路径
+
+        以下为筛选条件
+        :param start_date: 待下载图片的起始日期 (default: None)
+        :param end_date: 待下载图片的终止日期 (default: None)
+        :param keyword: 待下载图片对应的文字中包含的关键字 (default: "")
+        :param width_left: 图片宽度下界 (default: 0)
+        :param width_right: 图片宽度上界 (default: 5000)
+        :param height_left: 图片高度下界 (default: 0)
+        :param height_right: 图片高度上界 (default: 5000)
+        :return: NULL
+        Note:
+            photo info:
+                link, date, location, text, width, height
         """
-        utils.folder_make(_folder_name)
-        photos_href_list = self.get_photos_href_list(_homepage_url)
+        utils.folder_make(folder_name)
+        photos_href_list = self.get_photos_href_list(homepage_url)
         photos_info_list = self.get_photos_info_list(photos_href_list)
 
         if start_date is None and end_date is None:
             for photo_info in photos_info_list:
-                utils.download_photos(photo_info[0], _folder_name)
+                utils.download_photos(photo_info[0], folder_name)
         else:
             start_date_unix = utils.get_unix_stamp(start_date)
             end_date_unix = utils.get_unix_stamp(end_date)
             for photo_info in photos_info_list:
                 unix_time = photo_info[1]
-                if start_date_unix < unix_time < end_date_unix:
-                    utils.download_photos(photo_info[0], _folder_name)
+                if start_date_unix < unix_time < end_date_unix \
+                        and keyword in photo_info[3]:
+                    if width_left < photo_info[4] < width_right and height_left < photo_info[5] < height_right:
+                        utils.download_photos(photo_info[0], folder_name)
+                    else:
+                        pass
                 else:
                     pass
 
-    def download_photos_batch(self, _homepage_url_list, start_date=None, end_date=None):
-        for _homepage_url in _homepage_url_list:
-            folder_name = _homepage_url.split("/")[-1]
-            self.download_photos_one(_homepage_url, start_date, end_date, folder_name)
+    def download_photos_batch(self, user_info_list,
+                              start_date=None, end_date=None, keyword="",
+                              width_left=0, width_right=5000, height_left=0, height_right=5000):
+        """
+        多个用户照片下载
+        :param user_info_list: 用户信息列表
+                user_name, user_id, user_homepage_url, about
+        以下为筛选条件
+        :param start_date: 待下载图片的起始日期 (default: None)
+        :param end_date: 待下载图片的终止日期 (default: None)
+        :param keyword: 待下载图片对应的文字中包含的关键字 (default: "")
+        :param width_left: 图片宽度下界 (default: 0)
+        :param width_right: 图片宽度上界 (default: 5000)
+        :param height_left: 图片高度下界 (default: 0)
+        :param height_right: 图片高度上界 (default: 5000)
+        :return: NULL
+        """
+        for user_info in user_info_list:
+            folder_name = user_info[1]
+            homepage_url = user_info[2]
+            self.download_photos_one(homepage_url, folder_name=folder_name,
+                                     start_date=start_date, end_date=end_date, keyword=keyword,
+                                     width_left=width_left, width_right=width_right,
+                                     height_left=height_left, height_right=height_right)
+        print("Download completed.")
 
     def get(self, url):
         """
