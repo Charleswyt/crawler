@@ -40,7 +40,7 @@ from subprocess import call
 def is_exist(var):
     """
     判断当前变量是否存在
-    :param var: 待检测变量值
+    :param var: 待检测变量值 (需为字符串类型)
     :return: exist - True, not exist - False
     """
     try:
@@ -155,7 +155,7 @@ def folder_make(_folder_name="./"):
             os.mkdir(_folder_name)
 
 
-def get_time(_unix_time_stamp):
+def get_time(_unix_time_stamp=0):
     """
     unix时间戳 -> "%Y-%m-%d %H:%M:%S"格式的时间
     e.g. 1522048036 -> 2018-03-26 15:07:16
@@ -170,14 +170,13 @@ def get_time(_unix_time_stamp):
     return _time_string
 
 
-def get_unix_stamp(_time_string):
+def get_unix_stamp(_time_string="1970-01-01 08:01:51"):
     """
     "%Y-%m-%d %H:%M:%S"格式的时间 -> unix时间戳
     :param _time_string: "%Y-%m-%d %H:%M:%S"格式的时间
     :return: unix时间戳
     """
     _format = "%Y-%m-%d %H:%M:%S"
-    time.strptime(_time_string, _format)
     _unix_time_stamp = time.mktime(time.strptime(_time_string, _format))
 
     return int(_unix_time_stamp)
@@ -210,13 +209,35 @@ def url_type_judge(_url):
     """
     url_root = "https://www.facebook.com/"
     url_new = _url.replace(url_root, "")
-    url_cut = url_new.split(".")
-    if url_cut[0] == "profile":
+    url_cut = url_new.split("?")
+    if url_cut[0] == "profile.php":
         _url_type = 2
     else:
         _url_type = 1
 
     return _url_type
+
+
+def get_homepage_url(original_homepage_url):
+    """
+    对获取的url进行处理，去除尾标
+
+        https://www.facebook.com/profile.php?id=100000031380685&ref=br_rs ->
+            https://www.facebook.com/profile.php?id=100000031380685
+
+        https://www.facebook.com/nihaomexico?ref=br_rs ->
+            https://www.facebook.com/nihaomexico
+
+    :param original_homepage_url: 原始homepage url
+    :return:
+    """
+    url_type = url_type_judge(original_homepage_url)
+    if url_type == 1:
+        homepage_url = original_homepage_url.split("?")[0]
+    else:
+        homepage_url = original_homepage_url.split("&")[0]
+
+    return homepage_url
 
 
 def url_concatenate(base_url, join_url):
@@ -322,7 +343,7 @@ def download_photos(_link, _folder_name="./", _name=None):
 
 
 if __name__ == "__main__":
-    d = get_unix_stamp('2012-03-28 06:53:40')
+    d = get_unix_stamp("2012-03-28 0:0:0")
     print(d)
     s = get_time(1332888820)
     print(s)
