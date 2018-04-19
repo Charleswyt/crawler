@@ -9,7 +9,6 @@ Finished on 2018.04.13
 
 import re
 import os
-import time
 import json
 import utils
 from bs4 import BeautifulSoup
@@ -81,7 +80,7 @@ class Facebook:
         self.cookie = None                                                  # 当前登录账号的cookie
         self.session_id = None                                              # 会话id，方便在当前打开窗口继续运行
         self.executor_url = None                                            # 会话的命令执行器连接
-        self.cookies_path = "json_(" + _email + ").json"                      # 用于保存用户cookies的文件
+        self.cookies_path = "./cookies/cookies(" + _email + ").json"        # 用于保存用户cookies的文件
 
         # the initialization of list
         self.user_info_friends = list()                                     # 好友信息列表 (user_name, user_id, homepage_url)
@@ -100,8 +99,6 @@ class Facebook:
         self.myself_id_class_name = "data-nav-item-id"                      # 用户id对应的字段名
         self.friends_list_class_name = "uiProfileBlockContent"
         self.friends_number_id_name = "pagelet_timeline_medley_friends"     # 用于获取好友数量的id name
-        self.homepage_url_postfix_1 = "?fref=pb&hc_location=friends_tab"    # 一类URL的后缀
-        self.homepage_url_postfix_2 = "&fref=pb&hc_location=friends_tab"    # 二类URL的后缀
         self.browse_results_container = "//*[@id=\"BrowseResultsContainer\"]/div[1]"
 
         # the variables which may be variant regularly
@@ -148,6 +145,18 @@ class Facebook:
         self.main_container_class_name = main_container_class_name
         self.myself_id_class_name = myself_id_class_name
 
+    def get(self, url):
+        """
+        页面跳转，为避免多余跳转，先对当前页面的url进行判断，若url相同则不再跳转
+        :param url: 待跳转的url
+        :return: NULL
+        """
+        current_url = self.driver.current_url
+        if url == current_url:
+            pass
+        else:
+            self.driver.get(url)
+
     def login_with_account(self):
         """
         facebook login with username and password
@@ -156,21 +165,21 @@ class Facebook:
             如果facebook账号登录成功，则当前页面的url为:https://www.facebook.com
             如果facebook账号登录失败，则当前页面的url为:https://www.facebook.com/login.php?login_attempt=1&lwv=100
         """
-        self.driver.get(self.url)
+        self.get(self.url)
         try:
             # username
             email_element = WebDriverWait(self.driver, timeout=5).until(
                     EC.presence_of_element_located((By.ID, "email")))
             email_element.clear()
-            email_element.send_keys(self.user_name)
-            time.sleep(1)
+            email_element.send_keys(self.email)
+            self.driver.implicitly_wait(1)
 
             # password
             password_element = WebDriverWait(self.driver, timeout=5).until(
                     EC.presence_of_element_located((By.ID, "pass")))
             password_element.clear()
             password_element.send_keys(self.password)
-            time.sleep(1)
+            self.driver.implicitly_wait(1)
 
             # click
             login_element = WebDriverWait(self.driver, timeout=5).until(
@@ -206,6 +215,22 @@ class Facebook:
 
                 self.driver.get(self.url)
 
+    def is_login_success(self):
+        """
+        判断当前账户是否登录成功
+        :return:
+            login_status: False - Fail, True - Success
+        """
+        page = self.driver.page_source
+        soup = BeautifulSoup(page, self.soup_type)
+        flag = soup.find(id="sideNav")
+        if flag is not None:
+            login_status = True
+        else:
+            login_status = False
+
+        return login_status
+
     def sign_in(self):
         """
         facebook login via webdriver, cookies login first, if no cookies, login with account and save the cookies
@@ -214,25 +239,23 @@ class Facebook:
             如果facebook账号登录成功，则当前页面的url为:https://www.facebook.com
             如果facebook账号登录失败，则当前页面的url为:https://www.facebook.com/login.php?login_attempt=1&lwv=100
         """
-        try:
+        if os.path.exists(self.cookies_path):
             self.login_with_cookies()
-        except:
+        else:
             self.login_with_account()
 
         # status judgement
-        current_page_url = self.driver.current_url
-        if current_page_url != self.url:
-            self.login_state = 0
-        else:
-            self.login_state = 1
+        if self.is_login_success():
             self.save_cookie()
 
     def save_cookie(self):
+        if not os.path.exists("cookies"):
+            os.mkdir("cookies")
         # 获取cookie并通过json模块将dict转化成str
         dict_cookies = self.driver.get_cookies()
         json_cookies = json.dumps(dict_cookies)
         # 登录完成后，将cookie保存到本地文件
-        if os.path.exists(self.cookies_path):
+        if os.path.exists(os.path.join("./cookies", self.cookies_path)):
             pass
         else:
             with open(self.cookies_path, "w") as file:
@@ -307,7 +330,7 @@ class Facebook:
         user_info_class = main_container.find_all("a")
         user_name = user_info_class[1].get("title")
         homepage_url = user_info_class[1].get("href")
-        homepage_url = homepage_url.split("?")[0]
+        homepage_url = utils.get_homepage_url(homepage_url)
 
         self.user_name, self.user_id, self.homepage_url = user_name, user_id, homepage_url
 
@@ -345,6 +368,8 @@ class Facebook:
         :return:
             self.friends_number: 当前登录账户的好友数量
         """
+        if self.homepage_url is None:
+            self.get_myself_info()
         friends_page_url = utils.get_jump_url(self.homepage_url, "friends")
         self.get(friends_page_url)
         page_source = self.driver.page_source
@@ -360,46 +385,56 @@ class Facebook:
 
         self.friends_number = int(pattern.findall(content_text)[0])
 
-    def get_friends_list(self, _friends_number=None):
+    def get_friends_list(self, friends_number=None):
         """
         获取当前登录账户的好友列表
-        :param _friends_number: 待检索的好友数量
+        :param friends_number: 待检索的好友数量
         :return:
             self.user_info_friends: 好友用户信息 [user_name, user_id, homepage_url]
         """
-        if len(self.user_info_friends) == 0:
-            self.get_friends_number()
-            if _friends_number is None or _friends_number > self.friends_number:
-                self.page_refresh_to_bottom("friends")
-            else:
-                refresh_times = _friends_number // 20
-                self.page_refresh(refresh_times)
-            page_source = self.driver.page_source
-            soup = BeautifulSoup(page_source, self.soup_type)
+        self.get_friends_number()
+        self.user_info_friends = list()
 
-            # 获取好友url列表
-            contents = soup.find_all(class_=self.friends_list_class_name)
-            for content in contents:
-                homepage_url = content.a.get("href")
-                if utils.url_type_judge(homepage_url) == 1:
-                    homepage_url = homepage_url.replace(self.homepage_url_postfix_1, "")
-                if utils.url_type_judge(homepage_url) == 2:
-                    homepage_url = homepage_url.replace(self.homepage_url_postfix_2, "")
-                user_name = content.a.text
-                pattern = re.compile(r"id=\d+")
-                user_id = pattern.findall(content.a.get("data-hovercard"))[0].split("id=")[-1]
-
-                self.user_info_friends.append([user_name, user_id, homepage_url])
+        if friends_number is None or friends_number > self.friends_number:
+            self.page_refresh_to_bottom("friends")
         else:
-            pass
+            refresh_times = friends_number // 20
+            self.page_refresh(refresh_times)
+        page_source = self.driver.page_source
+        soup = BeautifulSoup(page_source, self.soup_type)
+
+        # 获取好友url列表
+        items = soup.find_all(class_=self.friends_list_class_name)
+
+        if friends_number is None or friends_number > self.friends_number:
+            for item in items:
+                friend_info = self.get_friend_info(item)
+                self.user_info_friends.append(friend_info)
+        else:
+            index = 0
+            while index < friends_number:
+                friend_info = self.get_friend_info(items[index])
+                self.user_info_friends.append(friend_info)
+                index += 1
+
+    @staticmethod
+    def get_friend_info(item):
+        homepage_url = item.a.get("href")
+        homepage_url = utils.get_homepage_url(homepage_url)
+        user_name = item.a.text
+        pattern = re.compile(r"id=\d+")
+        user_id = pattern.findall(item.a.get("data-hovercard"))[0].split("id=")[-1]
+
+        return [user_name, user_id, homepage_url]
 
     def get_user_info(self, item):
         data_be_str = item.div.get("data-bt")
-        user_id = utils.str2dict(data_be_str)["id"]
+        user_id = str(utils.str2dict(data_be_str)["id"])
 
         # 获取user homepage url
         user_info = item.find(class_=self.clearfix_flag)
         user_homepage_url = user_info.a.get("href")
+        user_homepage_url = utils.get_homepage_url(user_homepage_url)
 
         user_name_block = user_info.div.find(class_=self.clearfix_flag).find_all("div")
         # user_name_class_name = user_name_block[-1].a.get("class")[0]
@@ -411,7 +446,7 @@ class Facebook:
         try:
             about = about_class[5].text
         except:
-            about = None
+            about = ""
 
         return [user_name, user_id, user_homepage_url, about]
 
@@ -429,16 +464,16 @@ class Facebook:
         self.user_search_class_name = user_search_class_name
         self.user_name_class_name = user_name_class_name
 
-    def search_users(self, _keyword="wahaha", user_number=None):
+    def search_users(self, user_name="wahaha", user_number=None):
         """
         根据关键字进行用户搜索
-        :param _keyword: 待检索关键字
+        :param user_name: 待检索关键字
         :param user_number: 需要检索的用户数量
         :return:
             self.user_info_search: 用户信息列表 [user_name, user_id, location, homepage_url]
         """
         user_info_search = list()
-        search_url = "https://www.facebook.com/search/str/" + _keyword + "/keywords_users"
+        search_url = "https://www.facebook.com/search/str/" + user_name + "/keywords_users"
         self.get(search_url)
         page_source = self.driver.page_source
         soup = BeautifulSoup(page_source, self.soup_type)
@@ -459,9 +494,10 @@ class Facebook:
                 self.get_class_name_for_search()
 
             items = soup.find_all(class_=self.user_search_class_name)
+            total_user_number = len(items)
 
             # 列表填充
-            if user_number is None:
+            if user_number is None or user_number > total_user_number:
                 for item in items:
                     user_info_search.append(self.get_user_info(item))
             else:
@@ -485,29 +521,33 @@ class Facebook:
         self.get(photos_url)
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
-        try:
-            bottom_element = self.driver.find_element_by_xpath(self.bottom_xpath_other)
-        except:
-            bottom_element = None
-
         photos_href_list = list()
-        while bottom_element is None:
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-            page = self.driver.page_source
-            soup = BeautifulSoup(page, self.soup_type)
+        if soup.find(text="No photos to show") is not None:
+            return photos_href_list
+        else:
             try:
                 bottom_element = self.driver.find_element_by_xpath(self.bottom_xpath_other)
             except:
                 bottom_element = None
 
-            if bottom_element is not None:
-                break
+            while bottom_element is None:
+                self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-        for data in soup.find_all(class_="uiMediaThumb"):
-            photos_href_list.append(data.get("href"))
+                page = self.driver.page_source
+                soup = BeautifulSoup(page, self.soup_type)
+                try:
+                    bottom_element = self.driver.find_element_by_xpath(self.bottom_xpath_other)
+                except:
+                    bottom_element = None
 
-        return photos_href_list
+                if bottom_element is not None:
+                    break
+
+            for data in soup.find_all(class_="uiMediaThumb"):
+                photos_href_list.append(data.get("href"))
+
+            return photos_href_list
 
     def get_photo_info(self, _photo_href):
         """
@@ -541,10 +581,18 @@ class Facebook:
         return link, date, location, text, width, height
 
     def get_photos_info_list(self, _photos_href_list):
+        """
+        获取图片信息
+        :param _photos_href_list:
+        :return:
+        """
         photos_info_list = list()
-        for photo_href in _photos_href_list:
-            link, date, location, text, width, height = self.get_photo_info(photo_href)
-            photos_info_list.append([link, date, location, text, width, height])
+        if len(_photos_href_list) == 0:
+            pass
+        else:
+            for photo_href in _photos_href_list:
+                link, date, location, text, width, height = self.get_photo_info(photo_href)
+                photos_info_list.append([link, date, location, text, width, height])
 
         return photos_info_list
 
@@ -573,22 +621,25 @@ class Facebook:
         photos_href_list = self.get_photos_href_list(homepage_url)
         photos_info_list = self.get_photos_info_list(photos_href_list)
 
-        if start_date is None and end_date is None:
-            for photo_info in photos_info_list:
-                utils.download_photos(photo_info[0], folder_name)
+        if len(photos_href_list) == 0:
+            pass
         else:
-            start_date_unix = utils.get_unix_stamp(start_date)
-            end_date_unix = utils.get_unix_stamp(end_date)
-            for photo_info in photos_info_list:
-                unix_time = photo_info[1]
-                if start_date_unix < unix_time < end_date_unix \
-                        and keyword in photo_info[3]:
-                    if width_left < photo_info[4] < width_right and height_left < photo_info[5] < height_right:
-                        utils.download_photos(photo_info[0], folder_name)
+            if start_date is None and end_date is None:
+                for photo_info in photos_info_list:
+                    utils.download_photos(photo_info[0], folder_name)
+            else:
+                start_date_unix = utils.get_unix_stamp(start_date)
+                end_date_unix = utils.get_unix_stamp(end_date)
+                for photo_info in photos_info_list:
+                    unix_time = photo_info[1]
+                    if start_date_unix < unix_time < end_date_unix \
+                            and keyword in photo_info[3]:
+                        if width_left < photo_info[4] < width_right and height_left < photo_info[5] < height_right:
+                            utils.download_photos(photo_info[0], folder_name)
+                        else:
+                            pass
                     else:
                         pass
-                else:
-                    pass
 
     def download_photos_batch(self, user_info_list,
                               start_date=None, end_date=None, keyword="",
@@ -610,23 +661,12 @@ class Facebook:
         for user_info in user_info_list:
             folder_name = user_info[1]
             homepage_url = user_info[2]
+
             self.download_photos_one(homepage_url, folder_name=folder_name,
                                      start_date=start_date, end_date=end_date, keyword=keyword,
                                      width_left=width_left, width_right=width_right,
                                      height_left=height_left, height_right=height_right)
         print("Download completed.")
-
-    def get(self, url):
-        """
-        页面跳转，为避免多余跳转，先对当前页面的url进行判断，若url相同则不再跳转
-        :param url: 待跳转的url
-        :return: NULL
-        """
-        current_url = self.driver.current_url
-        if url == current_url:
-            pass
-        else:
-            self.driver.get(url)
 
     @staticmethod
     def get_photo_link(soup):
@@ -673,15 +713,59 @@ class Facebook:
 
         return _text
 
+    # 集成
+    def get_friends_photos(self, friends_number=None, start_date=None, end_date=None, keyword="",
+                           width_left=0, width_right=5000, height_left=0, height_right=5000):
+        """
+        爬取当前登录账户好友的照片
+        :param friends_number: 待爬取的好友数量
+
+        以下为筛选条件
+        :param start_date: 待下载图片的起始日期 (default: None)
+        :param end_date: 待下载图片的终止日期 (default: None)
+        :param keyword: 待下载图片对应的文字中包含的关键字 (default: "")
+        :param width_left: 图片宽度下界 (default: 0)
+        :param width_right: 图片宽度上界 (default: 5000)
+        :param height_left: 图片高度下界 (default: 0)
+        :param height_right: 图片高度上界 (default: 5000)
+        :return: NULL
+            Note: [user_name, user_id, homepage_url]
+        """
+        if len(self.user_info_friends) == 0:
+            self.get_friends_list(friends_number)
+
+        self.download_photos_batch(self.user_info_friends, start_date=start_date, end_date=end_date,
+                                   keyword=keyword, width_left=width_left, width_right=width_right,
+                                   height_left=height_left, height_right=height_right)
+
+    def get_user_photos(self, user_name=None, user_number=None, start_date=None, end_date=None, keyword="",
+                        width_left=0, width_right=5000, height_left=0, height_right=5000):
+        """
+        爬取当前登录账户好友的照片
+        :param user_name: 待爬取用户昵称
+        :param user_number: 待爬取的用户数量
+
+        以下为筛选条件
+        :param start_date: 待下载图片的起始日期 (default: None)
+        :param end_date: 待下载图片的终止日期 (default: None)
+        :param keyword: 待下载图片对应的文字中包含的关键字 (default: "")
+        :param width_left: 图片宽度下界 (default: 0)
+        :param width_right: 图片宽度上界 (default: 5000)
+        :param height_left: 图片高度下界 (default: 0)
+        :param height_right: 图片高度上界 (default: 5000)
+        :return: NULL
+            Note: [user_name, user_id, homepage_url]
+        """
+        if user_name is None:
+            self.get_friends_photos(friends_number=user_number, start_date=start_date, end_date=end_date,
+                                    keyword=keyword, width_left=width_left, width_right=width_right,
+                                    height_left=height_left, height_right=height_right)
+        else:
+            user_info_list = self.search_users(user_name=user_name, user_number=user_number)
+            self.download_photos_batch(user_info_list, start_date=start_date, end_date=end_date,
+                                       keyword=keyword, width_left=width_left, width_right=width_right,
+                                       height_left=height_left, height_right=height_right)
+
 
 if __name__ == "__main__":
-    email, password = utils.get_account("account.csv", 0)
-    fb = Facebook(email, password, "Chrome", False)
-    if fb.browser_state == 1:
-        fb.sign_in()
-        fb.enter_homepage_self()
-        fb.make_post()
-        cookies = fb.cookies
-
-    else:
-        print("Initialization failed.")
+    pass
