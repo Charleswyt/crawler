@@ -155,7 +155,7 @@ def folder_make(_folder_name="./"):
             os.mkdir(_folder_name)
 
 
-def get_time(_unix_time_stamp=0):
+def get_time(_unix_time_stamp=None):
     """
     unix时间戳 -> "%Y-%m-%d %H:%M:%S"格式的时间
     e.g. 1522048036 -> 2018-03-26 15:07:16
@@ -164,7 +164,10 @@ def get_time(_unix_time_stamp=0):
         "%Y-%m-%d %H:%M:%S"格式的时间
     """
     _format = "%Y-%m-%d %H:%M:%S"
-    value = time.localtime(_unix_time_stamp)
+    if _unix_time_stamp is None:
+        value = time.localtime()
+    else:
+        value = time.localtime(_unix_time_stamp)
     _time_string = time.strftime(_format, value)
 
     return _time_string
@@ -190,12 +193,9 @@ def get_size(_style_string):
         width: 图片的宽度
         height: 图片的高度
     """
-    try:
-        pattern = re.compile(r"\d+\.?\d*")
-        content = pattern.findall(_style_string)
-        _width, _height = content[0], content[1]
-    except:
-        _width, _height = 0, 0
+    pattern = re.compile(r"\d+\.?\d*")
+    content = pattern.findall(_style_string)
+    _width, _height = content[0], content[1]
 
     return _width, _height
 

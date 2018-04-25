@@ -10,7 +10,6 @@ Finished on 2018.04.13
 import re
 import os
 import json
-import time
 import utils
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -567,20 +566,15 @@ class Facebook:
         soup = BeautifulSoup(page, self.soup_type)
 
         date = self.get_photo_publish_date(soup)
+        print(date)
         location = self.get_photo_publish_location(soup)
+        print(location)
         text = self.get_photo_publish_text(soup)
-
-        try:
-            full_screen_element = WebDriverWait(self.driver, 5).until(
-                EC.presence_of_element_located((By.ID, self.full_screen_id)))
-            full_screen_element.click()
-        except:
-            pass
-        page = self.driver.page_source
-        soup = BeautifulSoup(page, self.soup_type)
-
+        print(text)
         link = self.get_photo_link(soup)
+        print(link)
         width, height = self.get_photo_size(soup)
+        print(width, height)
 
         return link, date, location, text, width, height
 
@@ -596,7 +590,10 @@ class Facebook:
         else:
             for photo_href in _photos_href_list:
                 link, date, location, text, width, height = self.get_photo_info(photo_href)
-                photos_info_list.append([link, date, location, text, width, height])
+                if width == 0 and height == 0:
+                    pass
+                else:
+                    photos_info_list.append([link, date, location, text, width, height])
 
         return photos_info_list
 
@@ -628,32 +625,29 @@ class Facebook:
         if len(photos_href_list) == 0:
             pass
         else:
-            if start_date is None and end_date is None:
-                for photo_info in photos_info_list:
-                    utils.download_photos(photo_info[0], folder_name)
-            else:
-                start_date_unix = utils.get_unix_stamp(start_date)
-                end_date_unix = utils.get_unix_stamp(end_date)
-                for photo_info in photos_info_list:
-                    unix_time = photo_info[1]
-                    if start_date_unix < unix_time < end_date_unix \
-                            and keyword in photo_info[3]:
-                        if width_left < photo_info[4] < width_right and height_left < photo_info[5] < height_right:
-                            utils.download_photos(photo_info[0], folder_name)
-                        else:
-                            pass
+            start_date_unix = utils.get_unix_stamp(start_date)
+            end_date_unix = utils.get_unix_stamp(end_date)
+            for photo_info in photos_info_list:
+                unix_time = int(photo_info[1])
+                if start_date_unix < unix_time < end_date_unix \
+                        and keyword in photo_info[3]:
+                    if width_left < int(photo_info[4]) < width_right and height_left < int(photo_info[5]) < height_right:
+                        utils.download_photos(photo_info[0], folder_name)
                     else:
                         pass
+                else:
+                    pass
 
-    def download_photos_batch(self, user_info_list,
-                              start_date=1075824000, end_date=int(time.time()), keyword="",
+    def download_photos_batch(self, user_info_list, root_folder="./",
+                              start_date="2004-2-4 0:0:0", end_date=utils.get_time(), keyword="",
                               width_left=0, width_right=10000, height_left=0, height_right=10000):
         """
         多个用户照片下载
         :param user_info_list: 用户信息列表
                 user_name, user_id, user_homepage_url, about
+        :param root_folder: 图片下载根目录
         以下为筛选条件
-        :param start_date: 待下载图片的起始日期 (default: 1075824000 -> 2004年2月4日，Facebook成立时间)
+        :param start_date: 待下载图片的起始日期 (default: 2004-2-4 0:0:0 -> 2004年2月4日，Facebook成立时间)
         :param end_date: 待下载图片的终止日期 (default: None)
         :param keyword: 待下载图片对应的文字中包含的关键字 (default: "")
         :param width_left: 图片宽度下界 (default: 0)
@@ -662,8 +656,11 @@ class Facebook:
         :param height_right: 图片高度上界 (default: 5000)
         :return: NULL
         """
+        if not os.path.exists(root_folder):
+            os.mkdir(root_folder)
+
         for user_info in user_info_list:
-            folder_name = user_info[1]
+            folder_name = os.path.join(root_folder, user_info[1])
             homepage_url = user_info[2]
 
             self.download_photos_one(homepage_url, folder_name=folder_name,
@@ -674,16 +671,22 @@ class Facebook:
 
     @staticmethod
     def get_photo_link(soup):
-        spotlight = soup.find(class_="spotlight")
-        _link = spotlight.get("src")                                            # 图片链接
+        spotlight = soup.find("img", class_="spotlight")
+        if spotlight is not None:
+            _link = spotlight.get("src")                                        # 图片链接
+        else:
+            _link = str()
 
         return _link
 
     @staticmethod
     def get_photo_size(soup):
         spotlight = soup.find(class_="spotlight")
-        style = spotlight.get("style")                                          # 图片尺寸字符串
-        _width, _height = utils.get_size(style)                                 # 获取图像的宽和高
+        if spotlight is not None:
+            style = spotlight.get("style")                                          # 图片尺寸字符串
+            _width, _height = utils.get_size(style)                                 # 获取图像的宽和高
+        else:
+            _width, _height = 0, 0
 
         return _width, _height
 
@@ -691,7 +694,7 @@ class Facebook:
     def get_photo_publish_date(soup):
         publish_time = soup.find("span", {"id": "fbPhotoSnowliftTimestamp"})
         if publish_time is None:
-            _date = None
+            _date = str()
         else:
             _date = publish_time.a.abbr.get("data-utime")                       # 图片发表的时间 (Unix时间戳)
 
@@ -701,7 +704,7 @@ class Facebook:
     def get_photo_publish_location(soup):
         location_object = soup.find(class_="fbPhotosImplicitLocLink")           # 图片发表的位置信息
         if location_object is None:
-            _location = None
+            _location = str()
         else:
             _location = location_object.text
 
@@ -711,7 +714,7 @@ class Facebook:
     def get_photo_publish_text(soup):
         text_object = soup.find("span", {"class": "hasCaption"})  # 图片发表时对应的文字说明
         if text_object is None:
-            _text = []
+            _text = str()
         else:
             _text = text_object.text
 
