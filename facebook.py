@@ -684,7 +684,10 @@ class Facebook:
         spotlight = soup.find(class_="spotlight")
         if spotlight is not None:
             style = spotlight.get("style")                                          # 图片尺寸字符串
-            _width, _height = utils.get_size(style)                                 # 获取图像的宽和高
+            if style is not None:
+                _width, _height = utils.get_size(style)                             # 获取图像的宽和高
+            else:
+                _width, _height = 0, 0
         else:
             _width, _height = 0, 0
 
