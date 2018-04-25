@@ -190,9 +190,12 @@ def get_size(_style_string):
         width: 图片的宽度
         height: 图片的高度
     """
-    pattern = re.compile(r"\d+\.?\d*")
-    content = pattern.findall(_style_string)
-    _width, _height = content[0], content[1]
+    try:
+        pattern = re.compile(r"\d+\.?\d*")
+        content = pattern.findall(_style_string)
+        _width, _height = content[0], content[1]
+    except:
+        _width, _height = 0, 0
 
     return _width, _height
 
@@ -284,7 +287,7 @@ def get_jump_url(_main_page_url, _key):
             _url = url_concatenate(_main_page_url, bunch)
 
         else:
-            _url = None
+            _url = ""
 
     return _url
 
@@ -343,7 +346,7 @@ def download_photos(_link, _folder_name="./", _name=None):
 
 
 if __name__ == "__main__":
-    d = get_unix_stamp("2012-03-28 0:0:0")
+    d = get_unix_stamp()
     print(d)
     s = get_time(1332888820)
     print(s)

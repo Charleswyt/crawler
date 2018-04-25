@@ -10,6 +10,7 @@ Finished on 2018.04.13
 import re
 import os
 import json
+import time
 import utils
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -569,9 +570,12 @@ class Facebook:
         location = self.get_photo_publish_location(soup)
         text = self.get_photo_publish_text(soup)
 
-        full_screen_element = WebDriverWait(self.driver, 5).until(
-            EC.presence_of_element_located((By.ID, self.full_screen_id)))
-        full_screen_element.click()
+        try:
+            full_screen_element = WebDriverWait(self.driver, 5).until(
+                EC.presence_of_element_located((By.ID, self.full_screen_id)))
+            full_screen_element.click()
+        except:
+            pass
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
 
@@ -642,14 +646,14 @@ class Facebook:
                         pass
 
     def download_photos_batch(self, user_info_list,
-                              start_date=None, end_date=None, keyword="",
-                              width_left=0, width_right=5000, height_left=0, height_right=5000):
+                              start_date=1075824000, end_date=int(time.time()), keyword="",
+                              width_left=0, width_right=10000, height_left=0, height_right=10000):
         """
         多个用户照片下载
         :param user_info_list: 用户信息列表
                 user_name, user_id, user_homepage_url, about
         以下为筛选条件
-        :param start_date: 待下载图片的起始日期 (default: None)
+        :param start_date: 待下载图片的起始日期 (default: 1075824000 -> 2004年2月4日，Facebook成立时间)
         :param end_date: 待下载图片的终止日期 (default: None)
         :param keyword: 待下载图片对应的文字中包含的关键字 (default: "")
         :param width_left: 图片宽度下界 (default: 0)

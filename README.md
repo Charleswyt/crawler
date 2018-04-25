@@ -48,7 +48,7 @@ Facebook的用户名从本质上来讲是唯一的，Facebook的用户名分为�
 可选关键字：["about", "photos", "friends", "videos", "music", "movies", "books", "tv"]
 
 4. 下拉刷新 <br>
-Facebook的页面均为Ajax动态加载，使用selenium模拟鼠标行为对页面进行下拉刷新，页面下拉刷新过程中可以预先设定下拉次数，但是会存在**页面信息预估不准**和**无效下拉**两种异常情况。因此，需要找到页面底端标识。 <br>
+Facebook的页面均为Ajax动态加载，使用selenium模拟鼠标行为对页面进行下拉刷新，页面下拉刷新过程中可以预先设定下拉次数，但是会存在**页面信息预估不准**和**无效下拉**两种异常情况。因此，需要找到**页面底端标识**。 <br>
 Facebook有两类页面底端标识，搜索页面的**End of Results**和用户信息页面的**More about you/Username**，考虑到不同语言的情况，不使用关键字检索，使用页面元素检索。 <br>
 以上两种底端标识对应的元素标识分别为：
 
@@ -58,9 +58,12 @@ Flag 	 				 | Class Name | id							  |XPath
  More about you/Username | - 		  | browse_end_of_results_footer  | //*[@id="browse_end_of_results_footer"]
 
 5. 原图链接获取 <br>
-Facebook的图像采用多级缩略图形式，用户主页，用户图片主页，图片以及全屏图片四种模式下的图片链接不完全相同,且每次重新加载后图像链接会更改，链接无法多次使用。 <br>
+Facebook的图像采用多级缩略图形式，**用户主页**，**用户图片主页**以及**图片预览**三种模式下的图片链接不完全相同，且从用户主页和用户图片主页均可进入到图片预览模式，两种模式下的链接不同，但均可实现图片的下载。本项目中使用从图片主页窗口进入的方式。 <br>
 
-6. 图片下载 <br>
+6. 图片信息获取 <br>
+
+
+7. 图片下载 <br>
 使用requests和shutil库对图片进行下载
 
 		if response.status_code == 200:
@@ -72,7 +75,15 @@ Facebook的图像采用多级缩略图形式，用户主页，用户图片主页
 Facebook对用户检索采用的是**模糊检索**方式，随机输入一个昵称后会返回零个或多个相近结果，对页面分析后可得到用户的实际昵称，ID，主页链接和相关信息（如工作单位或所在城市等）
 
 8. 页面分析 <br>
-页面分析使用BeautifulSoup4库，使用find_all方法，找到指定的id，class，span，text后即可实现元素获取
+页面分析使用**BeautifulSoup4**库，使用**find_all**方法，找到指定的**id**，**class**，**span**，**text**后即可实现元素获取
+
+9. 页面返回信息为空
+	在用户检索和查看用户媒体内容时，会出现内容为空的情况，Facebook会给用户以相应的提示，通过该类标识元素即可对页面内容进行判断。
+	+ 用户搜索返回为空 <br>
+	通过查找id=empty_result_error的元素即可完成判断
+	+ 用户媒体内容返回为空 <br>
+	通过查找**No photos to show**字符串进行判断
+
 
 ## URL Descaiption
 **homepage**
