@@ -562,21 +562,28 @@ class Facebook:
             height: 图像的实际高度
         """
         self.get(_photo_href)
-        self.driver.implicitly_wait(10)
-        
+        WebDriverWait(self.driver, timeout=10).until(
+            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftTimestamp")))
+
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
 
         date = self.get_photo_publish_date(soup)
-        print(date)
         location = self.get_photo_publish_location(soup)
-        print(location)
         text = self.get_photo_publish_text(soup)
-        print(text)
+
+        full_screen_element = WebDriverWait(self.driver, timeout=10).until(
+            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftFullScreenSwitch")))
+        try:
+            full_screen_element.click()
+        except:
+            pass
+
+        page = self.driver.page_source
+        soup = BeautifulSoup(page, self.soup_type)
+
         link = self.get_photo_link(soup)
-        print(link)
         width, height = self.get_photo_size(soup)
-        print(width, height)
 
         return link, date, location, text, width, height
 
@@ -697,9 +704,9 @@ class Facebook:
 
     @staticmethod
     def get_photo_publish_date(soup):
-        publish_time = soup.find("span", {"id": "fbPhotoSnowliftTimestamp"})
+        publish_time = soup.find("span", id="fbPhotoSnowliftTimestamp")
         if publish_time is None:
-            _date = str()
+            _date = "0"
         else:
             _date = publish_time.a.abbr.get("data-utime")                       # 图片发表的时间 (Unix时间戳)
 
