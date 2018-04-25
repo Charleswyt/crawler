@@ -562,6 +562,8 @@ class Facebook:
             height: 图像的实际高度
         """
         self.get(_photo_href)
+        self.driver.implicitly_wait(10)
+        
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
 
