@@ -11,6 +11,69 @@ You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. H
 ## browser
 **Chrome | Firefox**
 
+## Critical technology
+1. 模拟登录 <br>
+模拟登录分为初次登录和cookie登录 <br>
+Facebook的所有动态上传与数据下载均需在登录状态下完成，因此需先实现模拟登录<br>
+	* **初次登录** <br>
+	在初次登录中，使用selenium寻找Facebook的账号与密码输入框以及确定项，模拟手工操作实现登录。
+	* **cookie登录** <br>
+	cookie主要用于解决Facebook反爬检测。若用户频繁登录，则会被Facebook判定为异常，易被封号，因此在初次登录后保存cookie信息，用于后续的操作。
+ 
+			cookie格式(JSON)：
+			{
+				"secure": true,
+				"httpOnly": true, 
+				"path": "/", 
+				"value": "0J0JP757BRZglDevJ.AWU44Pk-lv2MkD1KmUbFSABhp58.Ba10h6.L8.AAA.0.0.Ba10h_.AWVfmtWL", 
+				"name": "fr", 
+				"domain": ".facebook.com", 
+				"expiry": 1531834239.141339
+			}
+			其中，expiry为cookie失效日期，格式为Unix时间戳
+
+2. 状态发布 <br>
+对网页进行解析，找到状态发布(Make Post)对应的元素，使用selenium对该元素进行定位，并在定位成功后实现点击，从而完成状态的发布。
+
+3. URL解析 <br>
+Facebook的用户链接分为两种：1. 用户名； 2.用户ID
+两种形式的用户主页链接分别为： <br>
+	https://www.facebook.com/qiao.fengchun <br>
+	https://www.facebook.com/profile.php?id=100005030479034 <br>
+Facebook的用户名从本质上来讲是唯一的，Facebook的用户名分为两种，**显示用户名**和**实际用户名**，如显示用户名为**haha**时，实际用户名则为**haha.521**，因此直接通过用户名对用户进行检索会存在误差。<br>
+	用户ID是唯一的，但是不直接对用户可见，需要对页面进行解析才可获取。 <br>
+	在用户主页链接的基础上，用户的照片，视频等数据的链接为：<br>
+	https://www.facebook.com/qiao.fengchun/friends <br>
+	https://www.facebook.com/profile.php?id=100005030479034&sk=photos <br>
+可选关键字：["about", "photos", "friends", "videos", "music", "movies", "books", "tv"]
+
+4. 下拉刷新 <br>
+Facebook的页面均为Ajax动态加载，使用selenium模拟鼠标行为对页面进行下拉刷新，页面下拉刷新过程中可以预先设定下拉次数，但是会存在**页面信息预估不准**和**无效下拉**两种异常情况。因此，需要找到页面底端标识。 <br>
+Facebook有两类页面底端标识，搜索页面的**End of Results**和用户信息页面的**More about you/Username**，考虑到不同语言的情况，不使用关键字检索，使用页面元素检索。 <br>
+以上两种底端标识对应的元素标识分别为：
+
+Flag 	 				 | Class Name | id							  |XPath
+:-:						 |:-:	      | :-:                           |:-:
+ End of Results 		 | uiHeader   | -							  | //*[@id="timeline-medley"]/div/div[2]/div[1]
+ More about you/Username | - 		  | browse_end_of_results_footer  | //*[@id="browse_end_of_results_footer"]
+
+5. 原图链接获取 <br>
+Facebook的图像采用多级缩略图形式，用户主页，用户图片主页，图片以及全屏图片四种模式下的图片链接不完全相同,且每次重新加载后图像链接会更改，链接无法多次使用。 <br>
+
+6. 图片下载 <br>
+使用requests和shutil库对图片进行下载
+
+		if response.status_code == 200:
+		photo_file_name = os.path.join("***.jpg")
+		with open(photo_file_name, "wb") as file:
+			shutil.copyfileobj(response.raw, file)
+
+7. 用户检索 <br>
+Facebook对用户检索采用的是**模糊检索**方式，随机输入一个昵称后会返回零个或多个相近结果，对页面分析后可得到用户的实际昵称，ID，主页链接和相关信息（如工作单位或所在城市等）
+
+8. 页面分析 <br>
+页面分析使用BeautifulSoup4库，使用find_all方法，找到指定的id，class，span，text后即可实现元素获取
+
 ## URL Descaiption
 **homepage**
 
