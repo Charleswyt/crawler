@@ -47,14 +47,13 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class Facebook:
-    def __init__(self, _email=None, _password=None, _browser_type="Chrome", _is_headless=False, _speed_mode="Normal"):
+    def __init__(self, _email=None, _password=None, _browser_type="Chrome", _is_headless=False):
         """
         构造函数
         :param _email: Facebook登录所需邮箱
         :param _password: Facebook登录对应的密码
         :param _browser_type: 浏览器类型 (Chrome | Firefox)
         :param _is_headless: 是否适用无头浏览器
-        :param _speed_mode: 运行速度模式选择 (Extreme | Fast | Normal | Slow)
         Return:
             browser_state:
                 0 - init fail
@@ -77,14 +76,11 @@ class Facebook:
         self.friends_number = 0                                             # 当前登录账号的好友数量
 
         # some parameters of webdriver
-        self.cookie = None                                                  # 当前登录账号的cookie
-        self.session_id = None                                              # 会话id，方便在当前打开窗口继续运行
-        self.executor_url = None                                            # 会话的命令执行器连接
         self.cookies_path = "./cookies/cookies(" + _email + ").json"        # 用于保存用户cookies的文件
 
         # the initialization of list
         self.user_info_friends = list()                                     # 好友信息列表 (user_name, user_id, homepage_url)
-        self.user_info_search = list()                                      # 通过搜索得到的用户信息列表 (user_name, homepage_url)
+        self.user_info_search = list()                                      # 通过搜索得到的用户信息列表 (user_name, user_id, homepage_url, about)
 
         # the variables which are static
         self.clearfix_flag = "clearfix"                                     # 网页消除浮动标识
@@ -132,9 +128,6 @@ class Facebook:
                     self.browser_state = 1
             except AttributeError:
                 self.browser_state = 0
-
-        # the run speed mode selection
-        self.timeout = utils.get_timeout(_speed_mode)
 
     def params_modify(self, cookies_path, post_class_name, bottom_xpath_search, bottom_xpath_other, main_container_class_name,
                       myself_id_class_name):
