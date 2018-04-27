@@ -1,22 +1,22 @@
 # Facebook Crawler
-**Facebook crawler** with **python3.x** (the "ladder" need solving by yourself) <br>
+**Facebook crawler** with **python3.x** (the "ladder" need solving by yourself)
 The official website of Python is https://www.python.org. <br>
 
 ## Packages
-**selenium**, **requests**, **BeautifulSoup4** and other built-in packages, such as **re**, **shutil**, **time**, **random**, **tkinter** and so on. <br>
+**selenium**, **requests**, **BeautifulSoup4** and other built-in packages, such as **re**, **shutil**, **time**, **random**, **tkinter** and so on.
 
-You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. Here, **jupyter notebook** and **IPython** is recommanded as the tool for step debug. <br>
+You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. Here, **jupyter notebook** and **IPython** is recommanded as the tool for step debug.
 
 **Install them with "pip" command**.
 
-The homepage url of selenium is https://www.seleniumhq.org/download/ <br>
+The homepage url of selenium is https://www.seleniumhq.org/download/.
 
 ## Browser
 **Chrome | Firefox** (In this project, Chrome is applied.)
 
 ## How to use
 1. Install the packages and browser mentioned above.
-2. Check whether your browser can be opened via the code. <br>
+2. Check whether your browser can be opened via the code.
 	+ If you use **Chrome browser** <br>
 	
 	Copy the **Chromedriver** into the python path or other path in the enviroment variables.
@@ -29,43 +29,46 @@ The homepage url of selenium is https://www.seleniumhq.org/download/ <br>
 	You just control Firefox at an appropriate version in order to avoid some incompatible error. <br>
 
 3. Run the code
-	+ For **Ttest**: to the path of the scripts and open the command line (Win + R and input "cmd"). Input "jupyter notebook"
+	+ For **Test**: to the path of the scripts and open the command line (Win + R and input "cmd"). Input "jupyter notebook", enter.
 	+ For **Run**: Use arbitrary IDE such as PyCharm. Or, use C++ or C# to call the scripts.
 
 ## Critical technology （This part is written in Chinese）
 ### Main procedure
-1. 模拟登录 <br>
-模拟登录分为**初次登录**和**cookie登录** <br>
-Facebook的所有动态上传与数据下载均需在登录状态下完成，因此需先实现模拟登录<br>
-	* **初次登录** <br>
+#### 1. 模拟登录 <br>
+模拟登录分为**初次登录**和**cookie登录**
+Facebook的所有动态上传与数据下载均需在登录状态下完成，因此需先实现模拟登录
+	* **初次登录**
 	在初次登录中，使用**selenium**寻找Facebook的账号与密码输入框以及确定项，模拟手工操作实现登录。
-	* **cookie登录** <br>
+	* **cookie登录**
 	cookie主要用于解决Facebook反爬检测。若用户频繁登录，则会被Facebook判定为异常，易被封号，因此在初次登录后保存cookie信息，用于后续的操作。
  
-			cookie格式(JSON)：
-			{
-				"secure": true,
-				"httpOnly": true, 
-				"path": "/", 
-				"value": "0J0JP757BRZglDevJ.AWU44Pk-lv2MkD1KmUbFSABhp58.Ba10h6.L8.AAA.0.0.Ba10h_.AWVfmtWL", 
-				"name": "fr", 
-				"domain": ".facebook.com", 
-				"expiry": 1531834239.141339
-			}
-			其中，expiry为cookie失效日期，格式为Unix时间戳
+	cookie格式(JSON)：
+	{
+		"secure": true,
+		"httpOnly": true, 
+		"path": "/", 
+		"value": "0J0JP757BRZglDevJ.AWU44Pk-lv2MkD1KmUbFSABhp58.Ba10h6.L8.AAA.0.0.Ba10h_.AWVfmtWL", 
+		"name": "fr", 
+		"domain": ".facebook.com", 
+		"expiry": 1531834239.141339
+	}
+	其中，expiry为cookie失效日期，格式为Unix时间戳
 
-2. 状态发布 <br>
+
+#### 2. 状态发布 <br>
 对网页进行解析，找到状态发布(Make Post)对应的元素，使用selenium对该元素进行定位，并在定位成功后实现点击，从而完成状态的发布，发布过程与直接使用浏览器登录Facebook并发布内容相同。
 
-3. URL解析 <br>
+#### 3. URL解析 <br>
 Facebook的用户链接分为两种：1. 用户名； 2.用户ID <br>
 两种形式的用户主页链接分别为： <br>
 	用户名形式：https://www.facebook.com/qiao.fengchun <br>
 	用户ID形式：https://www.facebook.com/profile.php?id=100005030479034 <br>
-	+ 用户名
+	
++ 用户名
 
 	Facebook的用户名从本质上来讲是唯一的，用户名分为两种，**显示用户名**和**实际用户名**，如显示用户名为**haha**时，实际用户名则可能为**haha.521**，因此直接通过显示用户名对用户进行检索会存在误差，实际用户名需在登录用户主页后才可获得。此外，Facebook会对用户名中的空格直接填充"."，如qiao fenchun的实际用户名为qiao.fengchun。<br>
-	+ 用户ID
+	
++ 用户ID
 
 	用户ID是唯一的，但是不直接对用户可见，需要对页面进行解析才可获取。 <br>
 	
@@ -74,7 +77,7 @@ Facebook的用户链接分为两种：1. 用户名； 2.用户ID <br>
 	https://www.facebook.com/profile.php?id=100005030479034&sk=photos <br>
 可选关键字：["about", "photos", "friends", "videos", "music", "movies", "books", "tv"]
 
-4. 下拉刷新 <br>
+#### 4. 下拉刷新 <br>
 Facebook的页面均为Ajax动态加载，使用selenium模拟鼠标行为对页面进行下拉刷新，页面下拉刷新过程中可以预先设定下拉次数，但是会存在**页面信息预估不准**和**无效下拉**两种异常情况。因此，需要找到**页面底端标识**。 <br>
 + **页面信息预估不准**：当需要获取的用户量大于页面显示的用户量时会出现该类问题 <br>
 + **无效下拉**：当所有信息全部显示后仍执行额外的下拉操作 <br>
@@ -88,30 +91,29 @@ Flag 	 				 | Class Name | id							  |XPath
  End of Results 		 | uiHeader   | -							  | //*[@id="timeline-medley"]/div/div[2]/div[1]
  More about you/Username | - 		  | browse_end_of_results_footer  | //*[@id="browse_end_of_results_footer"]
 
-5. 原图链接获取 <br>
+#### 5. 原图链接获取 <br>
 Facebook的图像采用多级缩略图形式，**用户主页**，**用户图片主页**以及**图片预览**三种模式下的图片链接不完全相同，且从用户主页和用户图片主页均可进入到图片预览模式，两种模式下的链接不同，但均可实现图片的下载。本项目中使用从图片主页窗口进入的方式。 <br>
 图片预览状态下获取图片链接易捕获无效链接，因此采用**全屏放大**后再获取链接的方式。<br>
 
-6. 图片信息获取 <br>
+#### 6. 图片信息获取 <br>
 我们主要获取图片的链接，发布时间，对应文字以及发布位置，对应文字和发布位置有可能为空
 
-7. 图片下载 <br>
+#### 7. 图片下载 <br>
 使用requests和shutil库对图片进行下载
 
-		if response.status_code == 200:
-		photo_file_name = os.path.join("***.jpg")
-		with open(photo_file_name, "wb") as file:
-			shutil.copyfileobj(response.raw, file)
+	if response.status_code == 200:
+	photo_file_name = os.path.join("***.jpg")
+	with open(photo_file_name, "wb") as file:
+		shutil.copyfileobj(response.raw, file)
 
-7. 检索 <br>
+#### 8. 检索 <br>
 Facebook采用的是**模糊检索**，随机输入一个关键字后会返回零个或多个相近结果，包括用户，照片，主页等，
-不同的检索内容对应不同的URL：<br>
-URL: https://www.facebook.com/search/str/"**keyword**"/**type** <br>
-+ keyword为待检索的字符串 <br>
-+ type为待检索的类型 <br>
-在各类检索中，还可进一步进行条件筛选，筛选条件在URL中为JSON形式 <br>
-	**用户 (People)**：keywords_users <br>
-		
+不同的检索内容对应不同的URL：
+URL: https://www.facebook.com/search/str/"**keyword**"/**type**
++ keyword为待检索的字符串
++ type为待检索的类型
+在各类检索中，还可进一步进行条件筛选，筛选条件在URL中为**JSON**形式
+	##### **用户 (People)**：keywords_users
 	+ 筛选类型：<br>
 	
 		- CITY
@@ -137,11 +139,10 @@ URL: https://www.facebook.com/search/str/"**keyword**"/**type** <br>
 		+ **filters_city**={"**name**":"users_location", "**args**":"110730292284790"}
 		+ **filters_school**={"**name**":"user_school", "**args**": "7701216166"}
 		+ **filters_employer**={"**name**":"users_employer**","**args**":"20528438720"}
-		+ **filters_friends**={"**name**":"users_friends","**args**":"100024373853102"} **or** **filters_friends**={"**name**":"users_friends_of_friends","**args**":"100024373853102"} **or** **filters_friends**={"**name**":"users_friends","**args**":"100024373853102"} <br>
-		args的键值均为ID，使用filters_friends筛选时，ID为用户ID，可通过网页解析获取，其余ID均为先验 <br>
+		+ **filters_friends**={"**name**":"users_friends","**args**":"100024373853102"} **or** **filters_friends**={"**name**":"users_friends_of_friends","**args**":"100024373853102"} **or** **filters_friends**={"**name**":"users_friends","**args**":"100024373853102"}
+		args的键值均为ID，使用filters_friends筛选时，ID为用户ID，可通过网页解析获取，其余ID均为先验 
 			各JSON字段之间用"&"连接
-
-	**主页 (pages)**：keywords_pages <br>
+	##### **主页 (pages)**：keywords_pages <br>
 		
 	+ 筛选类型：<br>
 
@@ -172,7 +173,7 @@ URL: https://www.facebook.com/search/str/"**keyword**"/**type** <br>
 			* 1019 (Entertainment) <br>
 			* 2612 (Cause or Community) <br>
 		
-	**照片 (Photos)**：photos-keyword <br>
+	##### **照片 (Photos)**：photos-keyword <br>
 
 	+ 筛选类型：<br>
 		
@@ -209,40 +210,34 @@ URL: https://www.facebook.com/search/str/"**keyword**"/**type** <br>
 		+ **filters_rp_location**={"**name**":"location","**args**":"106324046073002"}
 		
 		+ **filters_rp_creation_time**={"**name**":"creation_time","**args**":"{\"start_year\":\"2018\",\"start_month\":\"2018-01\",\"end_year\":\"2018\",\"end_month\":\"2018-12\"}"}
-			
-			**aregs**:
-
-			+ 指定年份，如2017，则键值为：
-				
-				{
-					\"start_year\":\"2017\",
-					\"start_month\":\"2017-01\",
-					\"end_year\":\"2017\",
-					\"end_month\":\"2017-12\"
-				}
+			**aregs**：
+			+ 指定年份，如2017，则键值为:
+					
+					{
+						"start_year":"2017",
+						"start_month":"2017-01",
+						"end_year":"2017",
+						"end_month":"2017-12"
+					}
 			+ 不指定年份，选定的时间需具体到月份，键值为：
 				
-				{
-					\"start_month\":\"2017-05\",
-					\"end_month\":\"2017-05\"
-				}
+					{
+						"start_month":"2017-05",
+						"end_month":"2017-05"
+					}
 
-	**小组 (Group)** ：keywords_groups <br>
-
-	+ 筛选类型：<br>
-		
+	##### **小组 (Group)** ：keywords_groups
+	+ 筛选类型
 		- SHOW ONLY
 			
 			* Any group
 			* Public Groups
 			* Closed groups
-
 		- MEMBERSHIP
-			
 			* Any group
 			* Friends' groups
-			* My groups
-			
+			* My groups	
+		
 		全部选**Any**时，URL为上述URL，当筛选条件存在时，则为:
 		
 		+ **filters_groups_show_only**={"**name**":"public_groups","**args**":""}
@@ -259,11 +254,11 @@ URL: https://www.facebook.com/search/str/"**keyword**"/**type** <br>
 			- friends_groups (Friends' groups)
 			- my_groups (My groups)
 			
-	**视频 (Videos)**：keywords_videos <br>
+	##### **视频 (Videos)**：keywords_videos
 
-		无筛选类型
+	无筛选类型
 	
-	**事件 (Events)**：keywords_events <br>
+	##### **事件 (Events)**：keywords_events
 
 	+ 筛选类型：<br>
 
@@ -301,27 +296,23 @@ URL: https://www.facebook.com/search/str/"**keyword**"/**type** <br>
 			- 2018-04-28~2018-04-29 (This weekend)
 			- 2018-04-30~2018-05-06 (Next week)
 				
-	**链接 (Links)** : links-keyword/articles-links <br>
+	##### **链接 (Links)** : links-keyword/articles-links
+	无筛选类型
 	
-		无筛选类型
+	##### **应用 (App)**   : keywords_apps
+	无筛选类型
 	
-	**应用 (App)**   : keywords_apps <br>
+#### 9. 页面分析
+页面分析使用**selenium**和**BeautifulSoup4**库
+selenium用于**动态解析**，如页面加载等待，查找输入框等
+BeautifulSoup4用于**静态解析**
 
-		无筛选类型
-	
-8. 页面分析 <br>
-
-	页面分析使用**selenium**和**BeautifulSoup4**库 <br>
-	selenium用于**动态解析**，如页面加载等待，查找输入框等 <br>
-	BeautifulSoup4用于**静态解析** <br>
-
-9. 页面返回信息为空 <br>
-
-	在用户检索和查看用户媒体内容时，会出现内容为空的情况，Facebook会给用户以相应的提示，通过该类标识元素即可对页面内容进行判断。
-	+ 用户搜索返回为空 <br>
-	通过查找id=empty_result_error的元素即可完成判断
-	+ 用户媒体内容返回为空 <br>
-	通过查找**No photos to show**字符串进行判断
+#### 10. 页面返回信息为空
+在用户检索和查看用户媒体内容时，会出现内容为空的情况，Facebook会给用户以相应的提示，通过该类标识元素即可对页面内容进行判断。
++ 用户搜索返回为空
+通过查找id=empty_result_error的元素即可完成判断
++ 用户媒体内容返回为空
+通过查找**No photos to show**字符串进行判断
 
 ## Flag description
 
@@ -368,7 +359,7 @@ a run demo can be saw in **demo.ipynb** file, the usage of jupyter can be seen i
 	fb.download_photos_batch(user_info_list, "photos")
 
 
-## Documention
+## API Documention
 	class Facebook
 
 	__init__(self, _user_name=None, _password=None, _browser_type="Chrome", _is_headless=False, _speed_mode="Normal")
