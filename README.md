@@ -1,22 +1,44 @@
 # Facebook Crawler
-**Facebook crawler** with **python3.x** (the "ladder" need solving by yourself)
+**Facebook crawler** with **python3.x** (the "ladder" need solving by yourself) <br>
+The official website of Python is https://www.python.org. <br>
 
 ## Packages
-**selenium**, **requests**, **BeautifulSoup4** and other built-in packages, such as **re**, **shutil**, **time**, **random**, **tkinter** and so on <br>
+**selenium**, **requests**, **BeautifulSoup4** and other built-in packages, such as **re**, **shutil**, **time**, **random**, **tkinter** and so on. <br>
 
 You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. Here, **jupyter notebook** and **IPython** is recommanded as the tool for step debug. <br>
 
-**Install them with "pip" command**
+**Install them with "pip" command**.
 
-## browser
-**Chrome | Firefox**
+The homepage url of selenium is https://www.seleniumhq.org/download/ <br>
 
-## Critical technology
+## Browser
+**Chrome | Firefox** (In this project, Chrome is applied.)
+
+## How to use
+1. Install the packages and browser mentioned above.
+2. Check whether your browser can be opened via the code. <br>
+	+ If you use **Chrome browser** <br>
+	
+	Copy the **Chromedriver** into the python path or other path in the enviroment variables.
+	The download link of Chromedriver is http://chromedriver.storage.googleapis.com/index.html. <br>
+	Download the suitable version according to the version of Chrome browser. <br>
+	The version of Chrome browser can be seen in "帮助 -> 关于Google Chrome"， either upgrade the Chrome browser or download corresponding Chromedriver is OK. <br>
+
+	+ If you use **Firefox browser** <br>
+	
+	You just control Firefox at an appropriate version in order to avoid some incompatible error. <br>
+
+3. Run the code
+	+ For **Ttest**: to the path of the scripts and open the command line (Win + R and input "cmd"). Input "jupyter notebook"
+	+ For **Run**: Use arbitrary IDE such as PyCharm. Or, use C++ or C# to call the scripts.
+
+## Critical technology （This part is written in Chinese）
+### Main procedure
 1. 模拟登录 <br>
-模拟登录分为初次登录和cookie登录 <br>
+模拟登录分为**初次登录**和**cookie登录** <br>
 Facebook的所有动态上传与数据下载均需在登录状态下完成，因此需先实现模拟登录<br>
 	* **初次登录** <br>
-	在初次登录中，使用selenium寻找Facebook的账号与密码输入框以及确定项，模拟手工操作实现登录。
+	在初次登录中，使用**selenium**寻找Facebook的账号与密码输入框以及确定项，模拟手工操作实现登录。
 	* **cookie登录** <br>
 	cookie主要用于解决Facebook反爬检测。若用户频繁登录，则会被Facebook判定为异常，易被封号，因此在初次登录后保存cookie信息，用于后续的操作。
  
@@ -33,15 +55,20 @@ Facebook的所有动态上传与数据下载均需在登录状态下完成，因
 			其中，expiry为cookie失效日期，格式为Unix时间戳
 
 2. 状态发布 <br>
-对网页进行解析，找到状态发布(Make Post)对应的元素，使用selenium对该元素进行定位，并在定位成功后实现点击，从而完成状态的发布。
+对网页进行解析，找到状态发布(Make Post)对应的元素，使用selenium对该元素进行定位，并在定位成功后实现点击，从而完成状态的发布，发布过程与直接使用浏览器登录Facebook并发布内容相同。
 
 3. URL解析 <br>
-Facebook的用户链接分为两种：1. 用户名； 2.用户ID
+Facebook的用户链接分为两种：1. 用户名； 2.用户ID <br>
 两种形式的用户主页链接分别为： <br>
-	https://www.facebook.com/qiao.fengchun <br>
-	https://www.facebook.com/profile.php?id=100005030479034 <br>
-Facebook的用户名从本质上来讲是唯一的，Facebook的用户名分为两种，**显示用户名**和**实际用户名**，如显示用户名为**haha**时，实际用户名则为**haha.521**，因此直接通过用户名对用户进行检索会存在误差。<br>
+	用户名形式：https://www.facebook.com/qiao.fengchun <br>
+	用户ID形式：https://www.facebook.com/profile.php?id=100005030479034 <br>
+	+ 用户名
+
+	Facebook的用户名从本质上来讲是唯一的，用户名分为两种，**显示用户名**和**实际用户名**，如显示用户名为**haha**时，实际用户名则可能为**haha.521**，因此直接通过显示用户名对用户进行检索会存在误差，实际用户名需在登录用户主页后才可获得。此外，Facebook会对用户名中的空格直接填充"."，如qiao fenchun的实际用户名为qiao.fengchun。<br>
+	+ 用户ID
+
 	用户ID是唯一的，但是不直接对用户可见，需要对页面进行解析才可获取。 <br>
+	
 	在用户主页链接的基础上，用户的照片，视频等数据的链接为：<br>
 	https://www.facebook.com/qiao.fengchun/friends <br>
 	https://www.facebook.com/profile.php?id=100005030479034&sk=photos <br>
@@ -49,6 +76,10 @@ Facebook的用户名从本质上来讲是唯一的，Facebook的用户名分为�
 
 4. 下拉刷新 <br>
 Facebook的页面均为Ajax动态加载，使用selenium模拟鼠标行为对页面进行下拉刷新，页面下拉刷新过程中可以预先设定下拉次数，但是会存在**页面信息预估不准**和**无效下拉**两种异常情况。因此，需要找到**页面底端标识**。 <br>
++ **页面信息预估不准**：当需要获取的用户量大于页面显示的用户量时会出现该类问题 <br>
++ **无效下拉**：当所有信息全部显示后仍执行额外的下拉操作 <br>
+以上两种异常情况会影响程序的执行效率，应尽量避免。<br>
++ **解决方案**：<br>
 Facebook有两类页面底端标识，搜索页面的**End of Results**和用户信息页面的**More about you/Username**，考虑到不同语言的情况，不使用关键字检索，使用页面元素检索。 <br>
 以上两种底端标识对应的元素标识分别为：
 
@@ -59,9 +90,10 @@ Flag 	 				 | Class Name | id							  |XPath
 
 5. 原图链接获取 <br>
 Facebook的图像采用多级缩略图形式，**用户主页**，**用户图片主页**以及**图片预览**三种模式下的图片链接不完全相同，且从用户主页和用户图片主页均可进入到图片预览模式，两种模式下的链接不同，但均可实现图片的下载。本项目中使用从图片主页窗口进入的方式。 <br>
+图片预览状态下获取图片链接易捕获无效链接，因此采用**全屏放大**后再获取链接的方式。<br>
 
 6. 图片信息获取 <br>
-
+我们主要获取图片的链接，发布时间，对应文字以及发布位置，对应文字和发布位置有可能为空
 
 7. 图片下载 <br>
 使用requests和shutil库对图片进行下载
@@ -71,78 +103,241 @@ Facebook的图像采用多级缩略图形式，**用户主页**，**用户图片
 		with open(photo_file_name, "wb") as file:
 			shutil.copyfileobj(response.raw, file)
 
-7. 用户检索 <br>
-Facebook对用户检索采用的是**模糊检索**方式，随机输入一个昵称后会返回零个或多个相近结果，对页面分析后可得到用户的实际昵称，ID，主页链接和相关信息（如工作单位或所在城市等）
+7. 检索 <br>
+Facebook采用的是**模糊检索**，随机输入一个关键字后会返回零个或多个相近结果，包括用户，照片，主页等，
+不同的检索内容对应不同的URL：<br>
+URL: https://www.facebook.com/search/str/"**keyword**"/**type** <br>
++ keyword为待检索的字符串 <br>
++ type为待检索的类型 <br>
+在各类检索中，还可进一步进行条件筛选，筛选条件在URL中为JSON形式 <br>
+	**用户 (People)**：keywords_users <br>
+		
+	+ 筛选类型：<br>
+	
+		- CITY
+			* Any city
+			* Choose a City
 
+		- EDUCTION
+			* Any school
+			* Choose a School
+		
+		- WORK
+			* Any company
+			* Choose a Company
+		
+		- MUTUAL FRIENDS
+			* Anyone
+			* Friends
+			* Friends of Friends
+			* Mutual Friends with  
+
+		全部选**Any**时，URL为上述URL，当筛选条件存在时，则为:
+
+		+ **filters_city**={"**name**":"users_location", "**args**":"110730292284790"}
+		+ **filters_school**={"**name**":"user_school", "**args**": "7701216166"}
+		+ **filters_employer**={"**name**":"users_employer**","**args**":"20528438720"}
+		+ **filters_friends**={"**name**":"users_friends","**args**":"100024373853102"} **or** **filters_friends**={"**name**":"users_friends_of_friends","**args**":"100024373853102"} **or** **filters_friends**={"**name**":"users_friends","**args**":"100024373853102"} <br>
+		args的键值均为ID，使用filters_friends筛选时，ID为用户ID，可通过网页解析获取，其余ID均为先验 <br>
+			各JSON字段之间用"&"连接
+
+	**主页 (pages)**：keywords_pages <br>
+		
+	+ 筛选类型：<br>
+
+		- VERIFIED
+			* Verified
+
+		- CATEGORY
+			* Any category
+			* Local Business or Place
+			* Company, Organization or Institution
+			* Brand or Product
+			* Artist, Band or Public Figure
+			* Entertainment
+			* Cause or Community
+		
+		全部选**Any**时，URL为上述URL，当筛选条件存在时，则为:
+		
+		+ **filters_verified**={"**name**":"pages_verified","**args**":""}
+			
+		+ **filters_category**={"**name**":"pages_category","**args**":"1006"}  <br>
+			
+			**args**:
+				
+			* 1006 (Local Business or Place) <br>
+			* 1013 (Local Business or Place) <br>
+			* 1009 (Brand or Product) <br>
+			* 1007,180164648685982 (Artist, Band or Public Figure) <br>
+			* 1019 (Entertainment) <br>
+			* 2612 (Cause or Community) <br>
+		
+	**照片 (Photos)**：photos-keyword <br>
+
+	+ 筛选类型：<br>
+		
+		- POSTED BY
+			
+			* Anyone
+			* You
+			* Your Friends
+			* Your Friends and Groups
+			* Choose a Source
+
+		- TAGGED LOCATION
+			* Anywhere
+			* Choose a Location
+	
+		- DATE POSTED
+			* Any date
+			* 2018
+			* 2017
+			* 2016
+			* Choose a Date
+	
+		全部选**Any**时，URL为上述URL，当筛选条件存在时，则为:
+
+		+ **filters_rp_author**={"**name**":"author_me","**args**":""}
+			
+			**name**:
+			
+			- author_me (You)
+			- author_friends (Your Friends)
+			- author_friends_groups (Your Friends and Groups)
+			- author (Choose a Source) args有值
+		
+		+ **filters_rp_location**={"**name**":"location","**args**":"106324046073002"}
+		
+		+ **filters_rp_creation_time**={"**name**":"creation_time","**args**":"{\"start_year\":\"2018\",\"start_month\":\"2018-01\",\"end_year\":\"2018\",\"end_month\":\"2018-12\"}"}
+			
+			**aregs**:
+
+			+ 指定年份，如2017，则键值为：
+				
+				{
+					\"start_year\":\"2017\",
+					\"start_month\":\"2017-01\",
+					\"end_year\":\"2017\",
+					\"end_month\":\"2017-12\"
+				}
+			+ 不指定年份，选定的时间需具体到月份，键值为：
+				
+				{
+					\"start_month\":\"2017-05\",
+					\"end_month\":\"2017-05\"
+				}
+
+	**小组 (Group)** ：keywords_groups <br>
+
+	+ 筛选类型：<br>
+		
+		- SHOW ONLY
+			
+			* Any group
+			* Public Groups
+			* Closed groups
+
+		- MEMBERSHIP
+			
+			* Any group
+			* Friends' groups
+			* My groups
+			
+		全部选**Any**时，URL为上述URL，当筛选条件存在时，则为:
+		
+		+ **filters_groups_show_only**={"**name**":"public_groups","**args**":""}
+			
+			**name**:
+			
+			- public_groups (Public Groups)
+			- closed_groups (Closed groups)
+
+		+ **filters_groups_memebership**={"**name**":"friends_groups","**args**":""}
+
+			**name**:
+			
+			- friends_groups (Friends' groups)
+			- my_groups (My groups)
+			
+	**视频 (Videos)**：keywords_videos <br>
+
+		无筛选类型
+	
+	**事件 (Events)**：keywords_events <br>
+
+	+ 筛选类型：<br>
+
+		- SHOW ONLY
+			
+			* Popular with Friends
+
+		- LOCATION
+			
+			* Anywhere
+			* Choose a City
+			* My groups
+		
+		- DATE
+			* Any date
+			* Today
+			* Tomorrow
+			* This week
+			* This weekend
+			* Next week
+
+		全部选**Any**时，URL为上述URL，当筛选条件存在时，则为:
+		
+		+ **filters_rp_events_popular_with_friends**={"**name**":"filter_events_popular_with_friends","**args**":""}
+
+		+ **filters_rp_events_location**={"**name**":"filter_events_location","**args**":"106283509403187"}
+
+		+ **filters_rp_events_date**={"**name**":"filter_events_date","**args**":"2018-04-26"}
+			
+			**args**:
+
+			- 2018-04-26 (Today)
+			- 2018-04-27 (Tomorrow)
+			- 2018-04-23~2018-04-29 (This week)
+			- 2018-04-28~2018-04-29 (This weekend)
+			- 2018-04-30~2018-05-06 (Next week)
+				
+	**链接 (Links)** : links-keyword/articles-links <br>
+	
+		无筛选类型
+	
+	**应用 (App)**   : keywords_apps <br>
+
+		无筛选类型
+	
 8. 页面分析 <br>
-页面分析使用**BeautifulSoup4**库，使用**find_all**方法，找到指定的**id**，**class**，**span**，**text**后即可实现元素获取
 
-9. 页面返回信息为空
+	页面分析使用**selenium**和**BeautifulSoup4**库 <br>
+	selenium用于**动态解析**，如页面加载等待，查找输入框等 <br>
+	BeautifulSoup4用于**静态解析** <br>
+
+9. 页面返回信息为空 <br>
+
 	在用户检索和查看用户媒体内容时，会出现内容为空的情况，Facebook会给用户以相应的提示，通过该类标识元素即可对页面内容进行判断。
 	+ 用户搜索返回为空 <br>
 	通过查找id=empty_result_error的元素即可完成判断
 	+ 用户媒体内容返回为空 <br>
 	通过查找**No photos to show**字符串进行判断
 
-
-## URL Descaiption
-**homepage**
-
-+ https://www.facebook.com/
-
-**login failure**
-
-+ https://www.facebook.com/login.php?login_attempt=1&lwv=110
-+ https://www.facebook.com/login.php&lwv=110
-
-**user homepage**
-	
-+ https://www.facebook.com/qiao.fengchun
-+ https://www.facebook.com/profile.php?id=100005030479034
-+ https://www.facebook.com/100005030479034
-
-**search** <br>
-
-- *https://www.facebook.com/search/"item"/?q="keyword"* <br>
-
-"**item**" and "**keyword**" can be replaced according to the demand <br>
-**item type**: posts, people, photos, videos, shop, pages, places, groups, apps, events, links <br>
-In this project, we mainly use the search of **people**, **photos**, **videos**. <br>
-
-+ https://www.facebook.com/search/people/?q=test
-+ https://www.facebook.com/search/str/test/keywords_users
-+ https://www.facebook.com/search/photos/?q=test
- 
-**user info** <br>
-
-- *https://www.facebook.com/"user_name"/"keyword"/* <br>
-- *https://www.facebook.com/profile.php?id="user_id"&sk="item"/* <br>
-
-"**item**" and "**user_id**" can be replaced according to the demand <br>
-**item type**: about, photos, friends, videos, music, movies, books, tv <br>
-
-+ https://www.facebook.com/qiao.fengchun/friends
-+ https://www.facebook.com/profile.php?id=100005030479034&sk=photos
-
-## Mechanism
-**User Search** <br>
-<table>
-<tr> <td>			      XPath						   								</td>   <td>   Variable    				 </td> </tr>
-<tr> <td> //*[@id="BrowseResultsContainer"]/div[m]/div 								</td>	<td> m=1,2,3,4,5 				 </td> </tr>
-<tr> <td> //*[@id="u_ps_fetchstream_0_3_0_browse_result_below_fold"]/div/div[n]/div </td>	<td> n=1,2,3,4,5,6 			 </td> </tr>
-<tr> <td> //*[@id="fbBrowseScrollingPagerContaineri"]/div/div[j]/div 				</td>	<td> i=1,2,... j=1,2,3,4,5,6 </td> </tr>
-</table>
-
-**User Search** <br>
-
-## class name description
+## Flag description
 
 <table>
-<tr> <td>Variable</td>         		<td>Value</td>    						<td>Function</td>
-<tr> <td>id_class_name</td>    		<td>clearfix sideNavItem stat_elem</td> <td>get the user id</td>
-<tr> <td>post_class_name</td>  		<td>_3jk</td>  							<td>make post</td>
-<tr> <td>user_item_class_name</td>  <td>_4p2o</td>  						<td>used to search an user in search satus</td>
-<tr> <td>user_info_class_name</td>  <td>_32mo</td>  						<td>get user info in search satus</td>
+
+ Variable 		| 	 Type 	| 		Value			|   Function	|
+ :-:			| 	 :-:	| 		 :-:			|			:-:	|
+ clearfix_flag  | 	  B1 	| 		  C1			| 	ss			|
+
+ A2 | B2 | C2
+ A3 | B3 | C3
+<tr> <td></td>         			<td>Value</td>    						<td>Function</td>
+<tr> <td>clearfix_flag</td>    			<td>clearfix</td> 						<td>网页浮动消除标识</td>
+<tr> <td>user_cover_class_name</td>  	<td>user_cover_class_name</td>  		<td>用户封面对应的class name</td>
+<tr> <td>bottom_class_name</td>  		<td>uiHeaderTitle</td>  				<td>用于确定图片、视频下载时有无下拉到最底</td>
+<tr> <td>bottom_xpath_search</td>  		<td>_32mo</td>  						<td>get user info in search satus</td>
 <tr> <td>location_class_name</td>   <td>_pac</td>  							<td>get user loaction in search satus</td>
 <tr> <td>id_class_name</td>    		<td>_3u1 _gli _uvb</td>  				<td>get user id in search satus</td>
 </table>
@@ -150,13 +345,28 @@ In this project, we mainly use the search of **people**, **photos**, **videos**.
 Note: these class name may be variant regularly
 
 ## Usage
-some examples can be saw in **examples.ipynb** file
+a run demo can be saw in **demo.ipynb** file, the usage of jupyter can be seen in the "How to use" <br>
 
 	user_name = "your user name"
 	password = "your password"
 	fb = Facebook(user_name, password)
-	fb.login()
+	fb.sign_in()	# 账户登录
+	fb.make_post()	# 状态发布
+	fb.driver.quit()# 关闭浏览器 (选择使用)
 	
+	user_name = "qiaofengchun"	# 待检索用户昵称
+	user_number = 3			# 待检索用户数量
+	user_info_list = fb.search_users(user_name=user_name, user_number=user_number) 	# 获取用户信息
+
+	# 打印检索得到的用户信息
+	index = 1
+	for user_info in user_info_list:
+    	print("No.", index, "user info:", user_info)
+    	index += 1
+
+	# 图像的批量下载
+	fb.download_photos_batch(user_info_list, "photos")
+
 
 ## Documention
 	class Facebook
