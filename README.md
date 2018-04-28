@@ -1,5 +1,5 @@
 # Facebook Crawler
-**Facebook crawler** with **python3.x** (the "ladder" need solving by yourself)
+**Facebook crawler** with **python3.x** (the "ladder" need solving by yourself). <br>
 The official website of Python is https://www.python.org. <br>
 
 ## Packages
@@ -9,7 +9,7 @@ You can use **pychram**, **spyder** or **jupyter notebook** to debug the code. H
 
 **Install them with "pip" command**.
 
-The homepage url of selenium is https://www.seleniumhq.org/download/.
+The homepage url of **selenium** is https://www.seleniumhq.org/download/.
 
 ## Browser
 **Chrome | Firefox** (In this project, Chrome is applied.)
@@ -32,7 +32,7 @@ The homepage url of selenium is https://www.seleniumhq.org/download/.
 	+ For **Test**: to the path of the scripts and open the command line (Win + R and input "cmd"). Input "jupyter notebook", enter.
 	+ For **Run**: Use arbitrary IDE such as PyCharm. Or, use C++ or C# to call the scripts.
 
-## Critical technology （This part is written in Chinese）
+## Critical Technology （This part is written in Chinese， and can be seen optionally.）
 ### Main procedure
 #### 1. 模拟登录 <br>
 模拟登录分为**初次登录**和**cookie登录**
@@ -314,26 +314,20 @@ BeautifulSoup4用于**静态解析**
 + 用户媒体内容返回为空
 通过查找**No photos to show**字符串进行判断
 
-## Flag description
+## Flag Description
 
 <table>
 
- Variable 		| 	 Type 	| 		Value			|   Function	|
- :-:			| 	 :-:	| 		 :-:			|			:-:	|
- clearfix_flag  | 	  B1 	| 		  C1			| 	ss			|
+ Variable 						| 	 	Type 		| 		   Value			|   			  Function						|
+ :-:							| 	 	:-:			| 		    :-:				|					:-:							|
+ browse_results_container_id	|        ID			| 	BrowseResultsContainer  |   用于在**用户检索**时获取用户信息块的类名		   		|
+ clearfix_flag  				|    Class Name 	|	      clearfix			| 	用于在**用户检索**时获取用户							|
+ 
 
- A2 | B2 | C2
- A3 | B3 | C3
-<tr> <td></td>         			<td>Value</td>    						<td>Function</td>
-<tr> <td>clearfix_flag</td>    			<td>clearfix</td> 						<td>网页浮动消除标识</td>
-<tr> <td>user_cover_class_name</td>  	<td>user_cover_class_name</td>  		<td>用户封面对应的class name</td>
-<tr> <td>bottom_class_name</td>  		<td>uiHeaderTitle</td>  				<td>用于确定图片、视频下载时有无下拉到最底</td>
-<tr> <td>bottom_xpath_search</td>  		<td>_32mo</td>  						<td>get user info in search satus</td>
-<tr> <td>location_class_name</td>   <td>_pac</td>  							<td>get user loaction in search satus</td>
-<tr> <td>id_class_name</td>    		<td>_3u1 _gli _uvb</td>  				<td>get user id in search satus</td>
-</table>
-
-Note: these class name may be variant regularly
+### Screenshot <br>
+Some Screenshots are shown below, the order is the same as the table in Flag Description.
+![](https://i.imgur.com/CjgN1dD.png)
+由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
 
 ## Usage
 a run demo can be saw in **demo.ipynb** file, the usage of jupyter can be seen in the "How to use" <br>
