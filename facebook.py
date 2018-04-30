@@ -73,7 +73,7 @@ class Facebook:
         self.user_name = None                                               # 当前登录账号的用户昵称
         self.user_id = None                                                 # 当前登录账号的用户ID
         self.homepage_url = None                                            # 当前登录账号的主页url
-        self.friends_number = 0                                             # 当前登录账号的好友数量
+        self.friends_number = None                                          # 当前登录账号的好友数量
 
         # some parameters of webdriver
         self.cookies_path = "./cookies/cookies(" + _email + ").json"        # 用于保存用户cookies的文件
@@ -86,16 +86,14 @@ class Facebook:
         self.clearfix_flag = "clearfix"                                     # 网页消除浮动标识
         self.user_cover_class_name = "cover"                                # 用户封面对应的class name
         self.bottom_class_name = "uiHeaderTitle"                            # 用于确定图片、视频下载时有无下拉到最底的class name
-        self.bottom_xpath_search = \
-            "//*[@id=\"browse_end_of_results_footer\"]/div/div"             # 用户搜索时对应的bottom标识
-        self.bottom_xpath_other = \
-            "//*[@id=\"timeline-medley\"]/div/div[2]/div[1]/div/div"        # 照片好友信息遍历时的bottom标识
+        self.bottom_id_search = "browse_end_of_results_footer"              # 用户搜索时对应的bottom标识
+        self.bottom_id_other = "timeline-medley"                            # 照片好友信息遍历时的bottom标识
         self.full_screen_id = "fbPhotoSnowliftFullScreenSwitch"             # 全屏操作对应的id
         self.main_container_class_name = "homeSideNav"                      # 用户获取当前登录账户信息的class name
         self.myself_id_class_name = "data-nav-item-id"                      # 用户id对应的字段名
         self.friends_list_class_name = "uiProfileBlockContent"
         self.friends_number_id_name = "pagelet_timeline_medley_friends"     # 用于获取好友数量的id name
-        self.browse_results_container = "//*[@id=\"BrowseResultsContainer\"]/div[1]"
+        self.browse_results_container_id = "BrowseResultsContainer"         # 用于获取
 
         # the variables which may be variant regularly
         self.post_class_name = "_3jk"                                       # 状态发布所需class name
@@ -129,12 +127,12 @@ class Facebook:
             except AttributeError:
                 self.browser_state = 0
 
-    def params_modify(self, cookies_path, post_class_name, bottom_xpath_search, bottom_xpath_other, main_container_class_name,
+    def params_modify(self, cookies_path, post_class_name, bottom_id_search, bottom_id_other, main_container_class_name,
                       myself_id_class_name):
         self.cookies_path = cookies_path
         self.post_class_name = post_class_name
-        self.bottom_xpath_search = bottom_xpath_search
-        self.bottom_xpath_other = bottom_xpath_other
+        self.bottom_id_search = bottom_id_search
+        self.bottom_id_other = bottom_id_other
         self.main_container_class_name = main_container_class_name
         self.myself_id_class_name = myself_id_class_name
 
@@ -161,21 +159,21 @@ class Facebook:
         self.get(self.url)
         try:
             # username
-            email_element = WebDriverWait(self.driver, timeout=5).until(
+            email_element = WebDriverWait(self.driver, timeout=10).until(
                     EC.presence_of_element_located((By.ID, "email")))
             email_element.clear()
             email_element.send_keys(self.email)
             self.driver.implicitly_wait(1)
 
             # password
-            password_element = WebDriverWait(self.driver, timeout=5).until(
+            password_element = WebDriverWait(self.driver, timeout=10).until(
                     EC.presence_of_element_located((By.ID, "pass")))
             password_element.clear()
             password_element.send_keys(self.password)
             self.driver.implicitly_wait(1)
 
             # click
-            login_element = WebDriverWait(self.driver, timeout=5).until(
+            login_element = WebDriverWait(self.driver, timeout=10).until(
                     EC.presence_of_element_located((By.ID, "loginbutton")))
             login_element.click()
         except:
@@ -214,12 +212,10 @@ class Facebook:
         :return:
             login_status: False - Fail, True - Success
         """
-        page = self.driver.page_source
-        soup = BeautifulSoup(page, self.soup_type)
-        flag = soup.find(id="sideNav")
-        if flag is not None:
+        try:
+            WebDriverWait(self.driver, timeout=10).until(EC.presence_of_element_located((By.ID, "sideNav")))
             login_status = True
-        else:
+        except:
             login_status = False
 
         return login_status
@@ -260,7 +256,8 @@ class Facebook:
             self.enter_homepage_self()
         else:
             pass
-        post_element = self.driver.find_element_by_class_name(self.post_class_name)
+        post_element = WebDriverWait(self.driver, timeout=10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, self.post_class_name)))
         post_element.click()
 
     def page_refresh_to_bottom(self, item, timeout=3, poll_frequency=0.5):
@@ -272,14 +269,14 @@ class Facebook:
         :return: NULL
         """
         if item == "users":
-            xpath = self.bottom_xpath_search
+            flag_id = self.bottom_id_search
         else:
-            xpath = self.bottom_xpath_other
+            flag_id = self.bottom_id_other
 
         while True:
             try:
                 WebDriverWait(self.driver, timeout=timeout, poll_frequency=poll_frequency).until(
-                    EC.presence_of_element_located((By.XPATH, xpath)))
+                    EC.presence_of_element_located((By.XPATH, flag_id)))
                 break
             except:
                 self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
@@ -294,11 +291,11 @@ class Facebook:
             self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
             try:
                 bottom_element = WebDriverWait(self.driver, timeout=3).until(
-                    EC.presence_of_element_located((By.XPATH, self.bottom_xpath_search)))
+                    EC.presence_of_element_located((By.ID, self.bottom_id_search)))
             except:
                 try:
                     bottom_element = WebDriverWait(self.driver, timeout=3).until(
-                        EC.presence_of_element_located((By.XPATH, self.bottom_xpath_other)))
+                        EC.presence_of_element_located((By.ID, self.bottom_id_other)))
                 except:
                     bottom_element = None
 
@@ -373,10 +370,13 @@ class Facebook:
 
         block = soup.find(class_=friends_table_class_name)
         content = block.find_all("div")
-        content_text = content[5].a.text
-        pattern = re.compile(r"\d+\.?\d*")
+        content_text = content[5].text
 
-        self.friends_number = int(pattern.findall(content_text)[0])
+        if content_text == "":
+            self.friends_number = 0
+        else:
+            pattern = re.compile(r"\d+\.?\d*")
+            self.friends_number = int(pattern.findall(content_text)[0])
 
     def get_friends_list(self, friends_number=None):
         """
@@ -385,30 +385,36 @@ class Facebook:
         :return:
             self.user_info_friends: 好友用户信息 [user_name, user_id, homepage_url]
         """
-        self.get_friends_number()
+        if self.friends_number is None:
+            self.get_friends_number()
+
         self.user_info_friends = list()
 
-        if friends_number is None or friends_number > self.friends_number:
-            self.page_refresh_to_bottom("friends")
+        if self.friends_number == 0:
+            pass
         else:
-            refresh_times = friends_number // 20
-            self.page_refresh(refresh_times)
-        page_source = self.driver.page_source
-        soup = BeautifulSoup(page_source, self.soup_type)
+            # 下拉刷新次数(若不设定好友数量或设定的好友数量大于实际的好友数量，则一拉到底；否则根据指定的数量确定下拉次数)
+            if friends_number is None or friends_number > self.friends_number:
+                self.page_refresh_to_bottom("friends")
+            else:
+                refresh_times = friends_number // 20
+                self.page_refresh(refresh_times)
+            page_source = self.driver.page_source
+            soup = BeautifulSoup(page_source, self.soup_type)
 
-        # 获取好友url列表
-        items = soup.find_all(class_=self.friends_list_class_name)
+            # 获取好友url列表
+            items = soup.find_all(class_=self.friends_list_class_name)
 
-        if friends_number is None or friends_number > self.friends_number:
-            for item in items:
-                friend_info = self.get_friend_info(item)
-                self.user_info_friends.append(friend_info)
-        else:
-            index = 0
-            while index < friends_number:
-                friend_info = self.get_friend_info(items[index])
-                self.user_info_friends.append(friend_info)
-                index += 1
+            if friends_number is None or friends_number > self.friends_number:
+                for item in items:
+                    friend_info = self.get_friend_info(item)
+                    self.user_info_friends.append(friend_info)
+            else:
+                index = 0
+                while index < friends_number:
+                    friend_info = self.get_friend_info(items[index])
+                    self.user_info_friends.append(friend_info)
+                    index += 1
 
     @staticmethod
     def get_friend_info(item):
@@ -421,6 +427,11 @@ class Facebook:
         return [user_name, user_id, homepage_url]
 
     def get_user_info(self, item):
+        """
+
+        :param item:
+        :return:
+        """
         data_be_str = item.div.get("data-bt")
         user_id = str(utils.str2dict(data_be_str)["id"])
 
@@ -447,7 +458,7 @@ class Facebook:
         page_source = self.driver.page_source
         soup = BeautifulSoup(page_source, self.soup_type)
 
-        element = self.driver.find_element_by_xpath(self.browse_results_container)
+        element = self.driver.find_element_by_id(self.browse_results_container_id)
         user_search_class_name = element.get_attribute("class")
         item = soup.find(class_=user_search_class_name)
         user_info = item.find(class_=self.clearfix_flag)
@@ -457,7 +468,7 @@ class Facebook:
         self.user_search_class_name = user_search_class_name
         self.user_name_class_name = user_name_class_name
 
-    def search_users(self, user_name="wahaha", user_number=None):
+    def search_users(self, user_name="qiaofengchun", user_number=None):
         """
         根据关键字进行用户搜索
         :param user_name: 待检索关键字
@@ -471,6 +482,7 @@ class Facebook:
         page_source = self.driver.page_source
         soup = BeautifulSoup(page_source, self.soup_type)
         empty_flag = soup.find(id="empty_result_error")
+
         if empty_flag is None:
             # 页面刷新
             if user_number is None:
@@ -489,7 +501,7 @@ class Facebook:
             items = soup.find_all(class_=self.user_search_class_name)
             total_user_number = len(items)
 
-            # 列表填充
+            # 列表填充(需根据指定的用户数量进行调节)
             if user_number is None or user_number > total_user_number:
                 for item in items:
                     user_info_search.append(self.get_user_info(item))
@@ -520,7 +532,7 @@ class Facebook:
             return photos_href_list
         else:
             try:
-                bottom_element = self.driver.find_element_by_xpath(self.bottom_xpath_other)
+                bottom_element = self.driver.find_element_by_id(self.bottom_id_other)
             except:
                 bottom_element = None
 
