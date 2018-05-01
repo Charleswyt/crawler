@@ -90,6 +90,7 @@ Flag 	 				 | Class Name | id							  |XPath
 :-:						 |:-:	      | :-:                           |:-:
  End of Results 		 | uiHeader   | -							  | //*[@id="timeline-medley"]/div/div[2]/div[1]
  More about you/Username | - 		  | browse_end_of_results_footer  | //*[@id="browse_end_of_results_footer"]
+ 
 
 #### 5. 原图链接获取 <br>
 Facebook的图像采用多级缩略图形式，**用户主页**，**用户图片主页**以及**图片预览**三种模式下的图片链接不完全相同，且从用户主页和用户图片主页均可进入到图片预览模式，两种模式下的链接不同，但均可实现图片的下载。本项目中使用从图片主页窗口进入的方式。 <br>
@@ -318,16 +319,29 @@ BeautifulSoup4用于**静态解析**
 
 <table>
 
- Variable 						| 	 	Type 		| 		   Value			|   			  Function						|
- :-:							| 	 	:-:			| 		    :-:				|					:-:							|
- browse_results_container_id	|        ID			| 	BrowseResultsContainer  |   用于在**用户检索**时获取用户信息块的类名		   		|
- clearfix_flag  				|    Class Name 	|	      clearfix			| 	用于在**用户检索**时获取用户							|
+ Variable 						| 	 	Type 		| 		         Value					|   			  Function							|
+ :-:							| 	 	:-:			| 		          :-					|					:-								|
+ browse_results_container_id	|        ID			| 		  BrowseResultsContainer  		|   用于在**用户检索**时获取用户信息块的类名		   		|
+ clearfix_flag  				|    Class Name 	|	      	    clearfix				| 	用于在**用户检索**时获取用户						|
+ post_class_name				|    Class Name		|  **\_3jk** (may be changed regularly)	|   用于实现用户**动态发布** 							|
+ user_cover_class_name			|    Class Name		| 			     cover  				|   用户封面类名，用于从用户主页**获取用户ID**			|
+ bottom_class_name 				|	 Class Name		|		     uiHeaderTitle				|   用户照片，视频等媒体内容页面的底线，用于**下拉刷新**	|
+ browse_end_of_results_footer	|	 	 ID			|      browse_end_of_results_footer		|   用户搜索页面的底线，用于**下拉刷新**				|
+ full_screen_id					| 		 ID			|	  fbPhotoSnowliftFullScreenSwitch   |	用于**图片全屏点击**，方便获取图片URL				|
+ homeSideNav					|    Class Name		|			  homeSideNav				|   facebook用户登录页导航栏，用于**判断是否登录成功**	|
+ friends_list_class_name		|    Class Name		|		  uiProfileBlockContent			|	用于**获取好友信息**								|
+ friends_number_id_name      	|    	 ID			|	  pagelet_timeline_medley_friends	|	用于**获取当前用户的好友数量**						|
+ 
  
 
 ### Screenshot <br>
-Some Screenshots are shown below, the order is the same as the table in Flag Description.
+Some Screenshots are shown below, the order is the same as the table in Flag Description. <br>
+1. 由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
 ![](https://i.imgur.com/CjgN1dD.png)
-由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
+2. 好友信息获取
+![](https://i.imgur.com/QRkLbG9.png)
+
+
 
 ## Usage
 a run demo can be saw in **demo.ipynb** file, the usage of jupyter can be seen in the "How to use" <br>
