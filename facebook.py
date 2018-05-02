@@ -85,13 +85,11 @@ class Facebook:
         # the variables which are static
         self.clearfix_flag = "clearfix"                                     # 网页消除浮动标识
         self.user_cover_class_name = "cover"                                # 用户封面对应的class name
-        self.bottom_class_name = "uiHeaderTitle"                            # 用于确定图片、视频下载时有无下拉到最底的class name
+        self.bottom_media_class_name = "uiHeaderTitle"                      # 用于确定图片、视频下载时有无下拉到最底的class name
         self.bottom_id_search = "browse_end_of_results_footer"              # 用户搜索时对应的bottom标识
-        self.bottom_id_other = "timeline-medley"                            # 照片好友信息遍历时的bottom标识
         self.full_screen_id = "fbPhotoSnowliftFullScreenSwitch"             # 全屏操作对应的id
         self.main_container_class_name = "homeSideNav"                      # 用户获取当前登录账户信息的class name
-        self.myself_id_class_name = "data-nav-item-id"                      # 用户id对应的字段名
-        self.friends_list_class_name = "uiProfileBlockContent"
+        self.friends_list_class_name = "uiProfileBlockContent"              # 用于获取好友信息的class name
         self.friends_number_id_name = "pagelet_timeline_medley_friends"     # 用于获取好友数量的id name
         self.browse_results_container_id = "BrowseResultsContainer"         # 用于获取
 
@@ -99,7 +97,7 @@ class Facebook:
         self.post_class_name = "_3jk"                                       # 状态发布所需class name
 
         # 用户搜索所需class name
-        self.user_search_class_name = None
+        self.user_block_class_name = None
         self.user_name_class_name = None
 
         # the selection of browser
@@ -126,15 +124,6 @@ class Facebook:
                     self.browser_state = 1
             except AttributeError:
                 self.browser_state = 0
-
-    def params_modify(self, cookies_path, post_class_name, bottom_id_search, bottom_id_other, main_container_class_name,
-                      myself_id_class_name):
-        self.cookies_path = cookies_path
-        self.post_class_name = post_class_name
-        self.bottom_id_search = bottom_id_search
-        self.bottom_id_other = bottom_id_other
-        self.main_container_class_name = main_container_class_name
-        self.myself_id_class_name = myself_id_class_name
 
     def get(self, url):
         """
@@ -269,17 +258,21 @@ class Facebook:
         :return: NULL
         """
         if item == "users":
-            flag_id = self.bottom_id_search
+            while True:
+                try:
+                    WebDriverWait(self.driver, timeout=timeout, poll_frequency=poll_frequency).until(
+                        EC.presence_of_element_located((By.XPATH, self.bottom_id_search)))
+                    break
+                except:
+                    self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
         else:
-            flag_id = self.bottom_id_other
-
-        while True:
-            try:
-                WebDriverWait(self.driver, timeout=timeout, poll_frequency=poll_frequency).until(
-                    EC.presence_of_element_located((By.XPATH, flag_id)))
-                break
-            except:
-                self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+            while True:
+                try:
+                    WebDriverWait(self.driver, timeout=timeout, poll_frequency=poll_frequency).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, self.bottom_media_class_name)))
+                    break
+                except:
+                    self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
 
     def page_refresh(self, _refresh_times=0):
         """
@@ -295,7 +288,7 @@ class Facebook:
             except:
                 try:
                     bottom_element = WebDriverWait(self.driver, timeout=3).until(
-                        EC.presence_of_element_located((By.ID, self.bottom_id_other)))
+                        EC.presence_of_element_located((By.CLASS_NAME, self.bottom_media_class_name)))
                 except:
                     bottom_element = None
 
@@ -316,7 +309,7 @@ class Facebook:
 
         main_container = soup.find(class_=self.main_container_class_name)
         id_class = main_container.li
-        user_id = id_class.get(self.myself_id_class_name)
+        user_id = id_class.get("data-nav-item-id")
         user_info_class = main_container.find_all("a")
         user_name = user_info_class[1].get("title")
         homepage_url = user_info_class[1].get("href")
@@ -342,7 +335,7 @@ class Facebook:
         :return: user id
         """
         if utils.url_type_judge(user_homepage_url) == 1:
-            self.driver.get(user_homepage_url)
+            self.get(user_homepage_url)
             page = self.driver.page_source
             soup = BeautifulSoup(page, self.soup_type)
             cover = soup.find(class_=self.user_cover_class_name)
@@ -428,7 +421,7 @@ class Facebook:
 
     def get_user_info(self, item):
         """
-
+        获取用户信息
         :param item:
         :return:
         """
@@ -455,17 +448,25 @@ class Facebook:
         return [user_name, user_id, user_homepage_url, about]
 
     def get_class_name_for_search(self):
+        """
+        获取在用户检索时的类名，以降低因网页更新带来的维护成本
+        :return:
+        """
         page_source = self.driver.page_source
         soup = BeautifulSoup(page_source, self.soup_type)
 
         element = self.driver.find_element_by_id(self.browse_results_container_id)
         user_search_class_name = element.get_attribute("class")
+        div_block = soup.find(class_=user_search_class_name)
+        block = div_block.find_all("div")
+        user_block_class_name = (block[0].get("class"))[0]
+
         item = soup.find(class_=user_search_class_name)
         user_info = item.find(class_=self.clearfix_flag)
         user_name_block = user_info.div.find(class_=self.clearfix_flag).find_all("div")
         user_name_class_name = user_name_block[-1].a.get("class")[0]
 
-        self.user_search_class_name = user_search_class_name
+        self.user_block_class_name = user_block_class_name
         self.user_name_class_name = user_name_class_name
 
     def search_users(self, user_name="qiaofengchun", user_number=None):
@@ -495,10 +496,10 @@ class Facebook:
             page_source = self.driver.page_source
             soup = BeautifulSoup(page_source, self.soup_type)
 
-            if self.user_search_class_name is None:
+            if self.user_block_class_name is None:
                 self.get_class_name_for_search()
 
-            items = soup.find_all(class_=self.user_search_class_name)
+            items = soup.find_all(class_=self.user_block_class_name)
             total_user_number = len(items)
 
             # 列表填充(需根据指定的用户数量进行调节)
@@ -532,7 +533,7 @@ class Facebook:
             return photos_href_list
         else:
             try:
-                bottom_element = self.driver.find_element_by_id(self.bottom_id_other)
+                bottom_element = self.driver.find_element_by_class_name(self.bottom_media_class_name)
             except:
                 bottom_element = None
 
@@ -542,7 +543,7 @@ class Facebook:
                 page = self.driver.page_source
                 soup = BeautifulSoup(page, self.soup_type)
                 try:
-                    bottom_element = self.driver.find_element_by_xpath(self.bottom_xpath_other)
+                    bottom_element = self.driver.find_element_by_class_name(self.bottom_media_class_name)
                 except:
                     bottom_element = None
 
@@ -569,6 +570,8 @@ class Facebook:
         self.get(_photo_href)
         WebDriverWait(self.driver, timeout=10).until(
             EC.presence_of_element_located((By.ID, "fbPhotoSnowliftTimestamp")))
+        WebDriverWait(self.driver, timeout=10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "spotlight")))
 
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
@@ -577,15 +580,15 @@ class Facebook:
         location = self.get_photo_publish_location(soup)
         text = self.get_photo_publish_text(soup)
 
-        full_screen_element = WebDriverWait(self.driver, timeout=10).until(
-            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftFullScreenSwitch")))
-        try:
-            full_screen_element.click()
-        except:
-            pass
-
-        page = self.driver.page_source
-        soup = BeautifulSoup(page, self.soup_type)
+        # full_screen_element = WebDriverWait(self.driver, timeout=10).until(
+        #     EC.presence_of_element_located((By.ID, "fbPhotoSnowliftFullScreenSwitch")))
+        # try:
+        #     full_screen_element.click()
+        # except:
+        #     pass
+        #
+        # page = self.driver.page_source
+        # soup = BeautifulSoup(page, self.soup_type)
 
         link = self.get_photo_link(soup)
         width, height = self.get_photo_size(soup)
@@ -604,10 +607,10 @@ class Facebook:
         else:
             for photo_href in _photos_href_list:
                 link, date, location, text, width, height = self.get_photo_info(photo_href)
-                if width == 0 and height == 0:
-                    pass
-                else:
-                    photos_info_list.append([link, date, location, text, width, height])
+                while width == 0 and height == 0:
+                    link, date, location, text, width, height = self.get_photo_info(photo_href)
+
+                photos_info_list.append([link, date, location, text, width, height])
 
         return photos_info_list
 
