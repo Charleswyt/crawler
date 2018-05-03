@@ -568,10 +568,12 @@ class Facebook:
             height: 图像的实际高度
         """
         self.get(_photo_href)
-        WebDriverWait(self.driver, timeout=10).until(
-            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftTimestamp")))
-        WebDriverWait(self.driver, timeout=10).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "spotlight")))
+        WebDriverWait(self.driver, timeout=20).until(
+            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftTimestamp")))           # 发布时间
+        WebDriverWait(self.driver, timeout=20).until(
+            EC.presence_of_element_located((By.CLASS_NAME, "spotlight")))                  # 图片链接与尺寸
+        full_screen_element = WebDriverWait(self.driver, timeout=20).until(
+            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftFullScreenSwitch")))    # 全屏显示
 
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
@@ -580,15 +582,13 @@ class Facebook:
         location = self.get_photo_publish_location(soup)
         text = self.get_photo_publish_text(soup)
 
-        # full_screen_element = WebDriverWait(self.driver, timeout=10).until(
-        #     EC.presence_of_element_located((By.ID, "fbPhotoSnowliftFullScreenSwitch")))
-        # try:
-        #     full_screen_element.click()
-        # except:
-        #     pass
-        #
-        # page = self.driver.page_source
-        # soup = BeautifulSoup(page, self.soup_type)
+        try:
+            full_screen_element.click()
+        except:
+            pass
+
+        page = self.driver.page_source
+        soup = BeautifulSoup(page, self.soup_type)
 
         link = self.get_photo_link(soup)
         width, height = self.get_photo_size(soup)
@@ -615,7 +615,7 @@ class Facebook:
         return photos_info_list
 
     def download_photos_one(self, homepage_url, folder_name="./",
-                            start_date=None, end_date=None, keyword="",
+                            start_date="2004-2-4 0:0:0", end_date=utils.get_time(), keyword="",
                             width_left=0, width_right=5000, height_left=0, height_right=5000):
         """
         单个用户的照片下载
@@ -623,8 +623,8 @@ class Facebook:
         :param folder_name: 待保存文件夹路径
 
         以下为筛选条件
-        :param start_date: 待下载图片的起始日期 (default: None)
-        :param end_date: 待下载图片的终止日期 (default: None)
+        :param start_date: 待下载图片的起始日期 (default: 2004-2-4 0:0:0)
+        :param end_date: 待下载图片的终止日期 (default: the current time)
         :param keyword: 待下载图片对应的文字中包含的关键字 (default: "")
         :param width_left: 图片宽度下界 (default: 0)
         :param width_right: 图片宽度上界 (default: 5000)
