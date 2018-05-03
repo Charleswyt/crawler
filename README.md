@@ -94,10 +94,10 @@ Flag 	 				 | Class Name | id							  |XPath
 
 #### 5. 原图链接获取 <br>
 Facebook的图像采用多级缩略图形式，**用户主页**，**用户图片主页**以及**图片预览**三种模式下的图片链接不完全相同，且从用户主页和用户图片主页均可进入到图片预览模式，两种模式下的链接不同，但均可实现图片的下载。本项目中使用从图片主页窗口进入的方式。 <br>
-图片预览状态下获取图片链接易捕获无效链接，因此采用**全屏放大**后再获取链接的方式。<br>
+图片预览状态下获取图片链接易捕获无效链接，预览状态下的图片链接与全屏放大后的链接虽然相同，但是直接在预览状态下下载的图片仍不是原图，因此采用**全屏放大**后再获取链接的方式。<br>
 
 #### 6. 图片信息获取 <br>
-我们主要获取图片的链接，发布时间，对应文字以及发布位置，对应文字和发布位置有可能为空
+我们主要获取图片的**链接**，**发布时间**，**对应文字**，**尺寸**以及**发布位置**，对应文字和发布位置有可能为空
 
 #### 7. 图片下载 <br>
 使用requests和shutil库对图片进行下载
@@ -336,15 +336,23 @@ BeautifulSoup4用于**静态解析**
 
 ### Screenshot <br>
 Some Screenshots are shown below, the order is the same as the table in Flag Description. <br>
-1. 由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
+#### 由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
 ![](https://i.imgur.com/CjgN1dD.png)
-2. 好友信息获取
+#### 好友信息获取
 ![](https://i.imgur.com/QRkLbG9.png)
-
+#### 图片信息获取
+##### 图片链接与尺寸
+![](https://i.imgur.com/UcGrNsb.png)
+##### 图片发布位置
+![](https://i.imgur.com/ZnQW9M3.png)
+##### 图片发布时间
+![](https://i.imgur.com/eSFTbne.png)
+##### 图片发布对应文字
+![](https://i.imgur.com/4ZHDvnn.png)
 
 
 ## Usage
-a run demo can be saw in **demo.ipynb** file, the usage of jupyter can be seen in the "How to use" <br>
+A run demo can be saw in **demo.ipynb** file, the usage of jupyter can be seen in the "How to use" <br>
 
 	user_name = "your user name"
 	password = "your password"
@@ -370,25 +378,29 @@ a run demo can be saw in **demo.ipynb** file, the usage of jupyter can be seen i
 ## API Documention
 	class Facebook
 
-	__init__(self, _user_name=None, _password=None, _browser_type="Chrome", _is_headless=False, _speed_mode="Normal")
+	__init__(self, _email=None, _password=None, _browser_type="Chrome", _is_headless=False)
 	function: constructor function
 	parameters:
-		_user_name: user name used for Facebook login
+		_email: user email used for Facebook login
 		_password: password used for Facebook login
 		_browser_type: browser type (Chrome | Firefox)
 		_is_headless: whether use headless browser or not (True | False)
-		_speed_mode: run speed mode (Extreme | Fast | Normal | Slow)
-			"Extreme":	self.timeout = 0
-        	"Fast":		self.timeout = randint(1, 3)
-  			"Normal":	self.timeout = randint(2, 5)
-       		"Slow":		self.timeout = randint(3, 8)
 	return:
+		browser_state:
+			0 - init fail
+            1 - init success
+	
+	def get(self, url)
+	function: web pages hop, avoid repeated hop. If the current url is the same as the url, no operation.
+	parameters：
+		url: the forthcoming url
+	return:
+		 
 
-	log_in(self)
-	function: facebook login
+	login_with_account(self)
+	function: facebook login via email and password
 	parameters:
 	return:
-		login_state (0 - False | 1 - True)
 
 	make_post(self)
 	function: post photos, videos, text or others to Facebook
