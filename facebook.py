@@ -85,7 +85,8 @@ class Facebook:
         # the variables which are static
         self.clearfix_flag = "clearfix"                                     # 网页消除浮动标识
         self.user_cover_class_name = "cover"                                # 用户封面对应的class name
-        self.bottom_media_class_name = "uiHeaderTitle"                      # 用于确定图片、视频下载时有无下拉到最底的class name
+        self.bottom_media_xpath = \
+            "//*[@id=\"timeline-medley\"]/div/div[2]/div[1]"                # 用于确定图片、视频下载时有无下拉到最底的class name
         self.bottom_id_search = "browse_end_of_results_footer"              # 用户搜索时对应的bottom标识
         self.full_screen_id = "fbPhotoSnowliftFullScreenSwitch"             # 全屏操作对应的id
         self.main_container_class_name = "homeSideNav"                      # 用户获取当前登录账户信息的class name
@@ -140,10 +141,6 @@ class Facebook:
     def login_with_account(self):
         """
         facebook login with username and password
-        :return: a status code —— True: Success, False: False
-        Note:
-            如果facebook账号登录成功，则当前页面的url为:https://www.facebook.com
-            如果facebook账号登录失败，则当前页面的url为:https://www.facebook.com/login.php?login_attempt=1&lwv=100
         """
         self.get(self.url)
         try:
@@ -171,10 +168,6 @@ class Facebook:
     def login_with_cookies(self):
         """
         facebook login with cookies
-        :return: a status code —— True: Success, False: False
-        Note:
-            如果facebook账号登录成功，则当前页面的url为:https://www.facebook.com
-            如果facebook账号登录失败，则当前页面的url为:https://www.facebook.com/login.php?login_attempt=1&lwv=100
         """
         if os.path.exists(self.cookies_path):
             with open(self.cookies_path, 'r', encoding='utf-8') as file:
@@ -198,11 +191,14 @@ class Facebook:
     def is_login_success(self):
         """
         判断当前账户是否登录成功
+        Note:
+            如果facebook账号登录成功，则当前页面的url为:https://www.facebook.com
+            如果facebook账号登录失败，则当前页面的url为:https://www.facebook.com/login.php?login_attempt=1&lwv=100
         :return:
             login_status: False - Fail, True - Success
         """
         try:
-            WebDriverWait(self.driver, timeout=10).until(EC.presence_of_element_located((By.ID, "sideNav")))
+            WebDriverWait(self.driver, timeout=20).until(EC.presence_of_element_located((By.ID, "sideNav")))
             login_status = True
         except:
             login_status = False
@@ -242,7 +238,7 @@ class Facebook:
     def make_post(self):
         current_url = self.driver.current_url
         if current_url != self.url:
-            self.enter_homepage_self()
+            self.get(self.url)
         else:
             pass
         post_element = WebDriverWait(self.driver, timeout=10).until(
@@ -269,7 +265,7 @@ class Facebook:
             while True:
                 try:
                     WebDriverWait(self.driver, timeout=timeout, poll_frequency=poll_frequency).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, self.bottom_media_class_name)))
+                        EC.presence_of_element_located((By.XPATH, self.bottom_media_xpath)))
                     break
                 except:
                     self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
@@ -288,7 +284,7 @@ class Facebook:
             except:
                 try:
                     bottom_element = WebDriverWait(self.driver, timeout=3).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, self.bottom_media_class_name)))
+                        EC.presence_of_element_located((By.XPATH, self.bottom_media_xpath)))
                 except:
                     bottom_element = None
 
@@ -533,7 +529,7 @@ class Facebook:
             return photos_href_list
         else:
             try:
-                bottom_element = self.driver.find_element_by_class_name(self.bottom_media_class_name)
+                bottom_element = self.driver.find_element_by_xpath(self.bottom_media_xpath)
             except:
                 bottom_element = None
 
@@ -543,7 +539,7 @@ class Facebook:
                 page = self.driver.page_source
                 soup = BeautifulSoup(page, self.soup_type)
                 try:
-                    bottom_element = self.driver.find_element_by_class_name(self.bottom_media_class_name)
+                    bottom_element = self.driver.find_element_by_xpath(self.bottom_media_xpath)
                 except:
                     bottom_element = None
 
