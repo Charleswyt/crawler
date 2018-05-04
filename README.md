@@ -103,9 +103,9 @@ Facebook的图像采用多级缩略图形式，**用户主页**，**用户图片
 使用requests和shutil库对图片进行下载
 
 	if response.status_code == 200:
-	photo_file_name = os.path.join("***.jpg")
-	with open(photo_file_name, "wb") as file:
-		shutil.copyfileobj(response.raw, file)
+		photo_file_name = os.path.join("***.jpg")
+		with open(photo_file_name, "wb") as file:
+			shutil.copyfileobj(response.raw, file)
 
 #### 8. 检索 <br>
 Facebook采用的是**模糊检索**，随机输入一个关键字后会返回零个或多个相近结果，包括用户，照片，主页等，
@@ -336,7 +336,8 @@ BeautifulSoup4用于**静态解析**
 
 ### Screenshot <br>
 Some Screenshots are shown below, the order is the same as the table in Flag Description. <br>
-#### 由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
+#### 用户信息获取
+由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
 ![](https://i.imgur.com/CjgN1dD.png)
 #### 好友信息获取
 ![](https://i.imgur.com/QRkLbG9.png)
