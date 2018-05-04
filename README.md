@@ -32,7 +32,8 @@ The homepage url of **selenium** is https://www.seleniumhq.org/download/.
 	+ For **Test**: to the path of the scripts and open the command line (Win + R and input "cmd"). Input "jupyter notebook", enter.
 	+ For **Run**: Use arbitrary IDE such as PyCharm. Or, use C++ or C# to call the scripts.
 
-## Critical Technology （This part is written in Chinese， and can be seen optionally.）
+## Critical Technology
+This part is written in Chinese， and can be seen optionally.
 ### Main procedure
 #### 1. 模拟登录 <br>
 模拟登录分为**初次登录**和**cookie登录**
