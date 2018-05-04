@@ -11,6 +11,7 @@ import re
 import os
 import json
 import utils
+from random import randint
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -261,6 +262,7 @@ class Facebook:
                     break
                 except:
                     self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+                    self.driver.implicitly_wait(randint(1, 5))
         else:
             while True:
                 try:
@@ -269,6 +271,7 @@ class Facebook:
                     break
                 except:
                     self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
+                    self.driver.implicitly_wait(randint(1, 5))
 
     def page_refresh(self, _refresh_times=0):
         """
@@ -276,7 +279,7 @@ class Facebook:
         :param _refresh_times: 刷新次数
         :return: NULL
         """
-        for i in range(_refresh_times):
+        for index in range(_refresh_times):
             self.driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
             try:
                 bottom_element = WebDriverWait(self.driver, timeout=3).until(
@@ -535,6 +538,7 @@ class Facebook:
 
             while bottom_element is None:
                 self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                self.driver.implicitly_wait(randint(1, 5))
 
                 page = self.driver.page_source
                 soup = BeautifulSoup(page, self.soup_type)
@@ -564,12 +568,22 @@ class Facebook:
             height: 图像的实际高度
         """
         self.get(_photo_href)
+
+        try:
+            zoom_in_element = WebDriverWait(self.driver, timeout=20).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "mtm")))                     # 用于解决无法自动放大的问题
+            zoom_in_element.clck()                                                          # 单击放大
+        except:
+            pass
+
         WebDriverWait(self.driver, timeout=20).until(
-            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftTimestamp")))           # 发布时间
+            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftTimestamp")))            # 发布时间
+
         WebDriverWait(self.driver, timeout=20).until(
-            EC.presence_of_element_located((By.CLASS_NAME, "spotlight")))                  # 图片链接与尺寸
+            EC.presence_of_element_located((By.CLASS_NAME, "spotlight")))                   # 图片链接与尺寸
+
         full_screen_element = WebDriverWait(self.driver, timeout=20).until(
-            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftFullScreenSwitch")))    # 全屏显示
+            EC.presence_of_element_located((By.ID, "fbPhotoSnowliftFullScreenSwitch")))     # 全屏显示
 
         page = self.driver.page_source
         soup = BeautifulSoup(page, self.soup_type)
