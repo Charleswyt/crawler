@@ -338,7 +338,7 @@ BeautifulSoup4用于**静态解析**
 ### Screenshot <br>
 Some Screenshots are shown below, the order is the same as the table in Flag Description. <br>
 #### 用户信息获取
-由于存储用户信息的类名**_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
+由于存储用户信息的类名**\_4p2o**有可能定期变化，ID更改的几率较低，因此为了降低后期维护成本，通过改ID获取到类名后再进一步获取用户信息。
 ![](https://i.imgur.com/CjgN1dD.png)
 #### 好友信息获取
 ![](https://i.imgur.com/QRkLbG9.png)
