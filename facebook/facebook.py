@@ -432,9 +432,9 @@ class Facebook:
         user_homepage_url = user_info.a.get("href")
         user_homepage_url = utils.get_homepage_url(user_homepage_url)
 
-        user_name_block = user_info.div.find(class_=self.clearfix_flag).find_all("div")
+        # user_name_block = user_info.div.find(class_=self.clearfix_flag).find_all("div")
         # user_name_class_name = user_name_block[-1].a.get("class")[0]
-        user_name = user_name_block[-1].a.text
+        user_name = user_info.find(class_="_32mo").span.text
 
         about_items = user_info.find_all("div")
         about_class = about_items[11].find_all("div")
@@ -462,11 +462,11 @@ class Facebook:
 
         item = soup.find(class_=user_search_class_name)
         user_info = item.find(class_=self.clearfix_flag)
-        user_name_block = user_info.div.find(class_=self.clearfix_flag).find_all("div")
-        user_name_class_name = user_name_block[-1].a.get("class")[0]
+        # user_name_block = user_info.div.find(class_=self.clearfix_flag).find_all("div")
+        # user_name_class_name = user_name_block[-1].a.get("class")[0]
 
         self.user_block_class_name = user_block_class_name
-        self.user_name_class_name = user_name_class_name
+        # self.user_name_class_name = user_name_class_name
 
     def search_users(self, user_name="qiaofengchun", user_number=None):
         """
@@ -495,8 +495,11 @@ class Facebook:
             page_source = self.driver.page_source
             soup = BeautifulSoup(page_source, self.soup_type)
 
-            if self.user_block_class_name is None:
-                self.get_class_name_for_search()
+            try:
+                if self.user_block_class_name is None:
+                    self.get_class_name_for_search()
+            except:
+                self.user_block_class_name = "_4p2o"
 
             items = soup.find_all(class_=self.user_block_class_name)
             total_user_number = len(items)
